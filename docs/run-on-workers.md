@@ -56,6 +56,7 @@ the session, download api, and tunnel each have a separate per-location rate lim
 | instagram (`instagram`) | public posts and reels when instagram's embed includes the media. supports photos, direct mp4s, and carousels. |
 | loom (`loom`) | public share and embed links with direct mp4. the browser handles muting and can add captions when loom provides them. |
 | pinterest (`pinterest`) | public image, gif, and direct mp4 pins, including short links. the browser handles audio extraction and muting. |
+| reddit (`reddit`) | public reddit-hosted videos and `v.redd.it` links with direct mp4 tracks. the browser joins separate audio and video tracks or exports audio by itself. |
 | soundcloud (`soundcloud`) | public track and short links, original aac in m4a, browser audio conversion. fragmented aac streams support up to 46 media segments per download. |
 | spotify (`spotify`) | public single-track links. reads spotify's public embed metadata and tries soundcloud, youtube music, then youtube. uses the audio pipeline for the source that matches. |
 | youtube (`youtube`) | direct audio and video tracks on public videos. when separate tracks are unavailable, the worker can use a combined mp4 for video or for browser-side audio extraction. coverage depends on the formats youtube returns to the worker. |

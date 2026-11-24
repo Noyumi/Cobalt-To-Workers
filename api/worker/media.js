@@ -9,6 +9,7 @@ import soundcloud from "../src/processing/services/soundcloud.js";
 import tiktok from "../src/processing/services/tiktok.js";
 import instagram from "./instagram.js";
 import pinterest from "./pinterest.js";
+import reddit from "./reddit.js";
 import spotify from "./spotify.js";
 import twitter from "./twitter.js";
 import { createTunnel, fetchFollowingRedirects, isMediaURLAllowed } from "./tunnel.js";
@@ -32,6 +33,11 @@ const adapters = {
     pinterest: {
         resolve: pinterest,
         metadataHosts: ["pin.it", "pinterest.com", "www.pinterest.com"],
+        alwaysProxy: true,
+    },
+    reddit: {
+        resolve: reddit,
+        metadataHosts: ["www.redditmedia.com", "www.reddit.com", "reddit.com", "v.redd.it"],
         alwaysProxy: true,
     },
     soundcloud: {
