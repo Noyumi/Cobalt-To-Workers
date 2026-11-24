@@ -6,6 +6,7 @@ import newgrounds from "../src/processing/services/newgrounds.js";
 import streamable from "../src/processing/services/streamable.js";
 import soundcloud from "../src/processing/services/soundcloud.js";
 import tiktok from "../src/processing/services/tiktok.js";
+import pinterest from "./pinterest.js";
 import spotify from "./spotify.js";
 import { createTunnel, fetchFollowingRedirects, isMediaURLAllowed } from "./tunnel.js";
 
@@ -18,6 +19,11 @@ const adapters = {
     streamable: { resolve: streamable, metadataHosts: ["api.streamable.com"] },
     newgrounds: { resolve: newgrounds, metadataHosts: ["www.newgrounds.com", "newgrounds.com"] },
     bsky: { resolve: bluesky, metadataHosts: ["public.api.bsky.app"] },
+    pinterest: {
+        resolve: pinterest,
+        metadataHosts: ["pin.it", "pinterest.com", "www.pinterest.com"],
+        alwaysProxy: true,
+    },
     soundcloud: {
         resolve: soundcloud,
         metadataHosts: soundCloudHosts,
@@ -139,7 +145,7 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         return formatResponse(type, data);
     }
 
-    const alwaysProxy = params.alwaysProxy || params.localProcessing === "forced";
+    const alwaysProxy = adapter.alwaysProxy || params.alwaysProxy || params.localProcessing === "forced";
     const result = await adapter.resolve({
         ...patternMatch,
         isAudioOnly: params.downloadMode === "audio",

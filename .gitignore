@@ -8,6 +8,10 @@ node_modules
 # static build
 build
 
+# temporary tests
+*.test
+*.test.*
+
 # secrets
 .env
 .env.*

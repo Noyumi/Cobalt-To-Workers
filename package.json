@@ -5,7 +5,7 @@
         "pnpm": ">=9"
     },
     "scripts": {
-        "test:workers": "node --test api/worker/test/worker.test.js",
+        "test:workers": "node --test api/worker/test/worker.js",
         "workers:api:dev": "wrangler dev --config api/wrangler.jsonc",
         "workers:api:deploy": "wrangler deploy --config api/wrangler.jsonc",
         "workers:web:dev": "wrangler dev --config web/wrangler.jsonc",

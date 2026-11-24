@@ -15,6 +15,7 @@ const mediaHosts = new Map([
     ["streamable", ["*.streamable.com"]],
     ["newgrounds", ["*.newgrounds.com", "*.ngfiles.com", "*.ungrounded.net"]],
     ["bsky", ["cdn.bsky.app", "media.tenor.com"]],
+    ["pinterest", ["i.pinimg.com", "v1.pinimg.com"]],
     ["soundcloud", ["*.sndcdn.com", "playback.media-streaming.soundcloud.cloud"]],
     ["youtube", ["*.googlevideo.com", "i.ytimg.com"]],
     ["tiktok", ["*.tiktokcdn.com", "*.tiktokcdn-us.com", "*.tiktokcdn-eu.com", "*.tiktokv.com", "*.muscdn.com"]],
