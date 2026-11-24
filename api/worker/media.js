@@ -10,6 +10,7 @@ import tiktok from "../src/processing/services/tiktok.js";
 import instagram from "./instagram.js";
 import pinterest from "./pinterest.js";
 import spotify from "./spotify.js";
+import twitter from "./twitter.js";
 import { createTunnel, fetchFollowingRedirects, isMediaURLAllowed } from "./tunnel.js";
 
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36";
@@ -46,6 +47,12 @@ const adapters = {
         metadataHosts: youtubeHosts,
     },
     tiktok: { resolve: tiktok, metadataHosts: ["www.tiktok.com", "tiktok.com", "vt.tiktok.com"] },
+    twitter: {
+        resolve: twitter,
+        metadataHosts: ["cdn.syndication.twimg.com"],
+        alwaysProxy: true,
+        tunnelPicker: true,
+    },
 };
 
 export function enabledServices(disabled = "") {

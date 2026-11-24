@@ -21,6 +21,7 @@ const mediaHosts = new Map([
     ["soundcloud", ["*.sndcdn.com", "playback.media-streaming.soundcloud.cloud"]],
     ["youtube", ["*.googlevideo.com", "i.ytimg.com"]],
     ["tiktok", ["*.tiktokcdn.com", "*.tiktokcdn-us.com", "*.tiktokcdn-eu.com", "*.tiktokv.com", "*.muscdn.com"]],
+    ["twitter", ["pbs.twimg.com", "video.twimg.com"]],
 ]);
 
 export function isMediaURLAllowed(service, target) {

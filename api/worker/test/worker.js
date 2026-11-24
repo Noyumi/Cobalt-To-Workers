@@ -392,7 +392,7 @@ test("advertises browser conversion, configured services, and frontend CORS", as
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("access-control-allow-origin"), frontend);
     const { cobalt } = await response.json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "bluesky", "instagram", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "bluesky", "instagram", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok", "twitter"]));
     assert.equal(cobalt.localProcessingRequired, true);
     assert.equal(cobalt.turnstileSitekey, settings.TURNSTILE_SITEKEY);
 
@@ -648,7 +648,7 @@ test("redeems a tunnel in another Worker isolate", async () => {
     assert.equal(await response.text(), "media");
 
     const { cobalt } = await (await second.fetch(api)).json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "instagram", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "instagram", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok", "twitter"]));
 });
 
 test("rejects an expired tunnel with a valid signature", async ({ mock }) => {
