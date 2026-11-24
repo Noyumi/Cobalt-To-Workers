@@ -1,7 +1,5 @@
-import { genericUserAgent } from "../../config.js";
-
-const craftHeaders = id => ({
-    "user-agent": genericUserAgent,
+const craftHeaders = (id, userAgent) => ({
+    "user-agent": userAgent,
     "content-type": "application/json",
     origin: "https://www.loom.com",
     referer: `https://www.loom.com/share/${id}`,
@@ -9,10 +7,10 @@ const craftHeaders = id => ({
     "x-loom-request-source": "loom_web_be851af",
 });
 
-async function fromTranscodedURL(id) {
-    const gql = await fetch(`https://www.loom.com/api/campaigns/sessions/${id}/transcoded-url`, {
+async function fromTranscodedURL(id, fetcher, headers) {
+    const gql = await fetcher(`https://www.loom.com/api/campaigns/sessions/${id}/transcoded-url`, {
         method: "POST",
-        headers: craftHeaders(id),
+        headers,
         body: JSON.stringify({
             force_original: false,
             password: null,
@@ -28,10 +26,10 @@ async function fromTranscodedURL(id) {
     }
 }
 
-async function fromRawURL(id) {
-    const gql = await fetch(`https://www.loom.com/api/campaigns/sessions/${id}/raw-url`, {
+async function fromRawURL(id, fetcher, headers) {
+    const gql = await fetcher(`https://www.loom.com/api/campaigns/sessions/${id}/raw-url`, {
         method: "POST",
-        headers: craftHeaders(id),
+        headers,
         body: JSON.stringify({
             anonID: crypto.randomUUID(),
             client_name: "web",
@@ -50,10 +48,10 @@ async function fromRawURL(id) {
     }
 }
 
-async function getTranscript(id) {
-    const gql = await fetch(`https://www.loom.com/graphql`, {
+async function getTranscript(id, fetcher, headers) {
+    const gql = await fetcher("https://www.loom.com/graphql", {
         method: "POST",
-        headers: craftHeaders(id),
+        headers,
         body: JSON.stringify({
             operationName: "FetchVideoTranscriptForFetchTranscript",
             variables: {
@@ -85,9 +83,13 @@ async function getTranscript(id) {
     }
 }
 
-export default async function({ id, subtitleLang }) {
-    let url = await fromTranscodedURL(id);
-    url ??= await fromRawURL(id);
+export default async function({ id, subtitleLang, fetcher = fetch, userAgent }) {
+    id = id?.match(/(?:^|-)([a-f0-9]{32})$/i)?.[1];
+    if (!id) return { error: "fetch.empty" };
+
+    const headers = craftHeaders(id, userAgent);
+    let url = await fromTranscodedURL(id, fetcher, headers);
+    url ??= await fromRawURL(id, fetcher, headers);
 
     if (!url) {
         return { error: "fetch.empty" }
@@ -95,7 +97,7 @@ export default async function({ id, subtitleLang }) {
 
     let subtitles;
     if (subtitleLang) {
-        const transcript = await getTranscript(id);
+        const transcript = await getTranscript(id, fetcher, headers);
         if (transcript) subtitles = transcript;
     }
 

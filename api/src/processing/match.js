@@ -249,6 +249,7 @@ export default async function({ host, patternMatch, params, authType }) {
                 r = await loom({
                     id: patternMatch.id,
                     subtitleLang,
+                    userAgent: genericUserAgent,
                 });
                 break;
 

@@ -53,6 +53,7 @@ the session, download api, and tunnel each have a separate per-location rate lim
 | streamable (`streamable`) | direct video, optional proxy, browser audio and mute |
 | newgrounds (`newgrounds`) | streamed video and audio, browser conversion. disabled by default after live staging requests failed. |
 | bluesky (`bsky`) | single images, image pickers, and supported tenor gifs |
+| loom (`loom`) | public share and embed links with direct mp4. the browser handles muting and can add captions when loom provides them. |
 | pinterest (`pinterest`) | public image, gif, and direct mp4 pins, including short links. the browser handles audio extraction and muting. |
 | soundcloud (`soundcloud`) | public track and short links, original aac in m4a, browser audio conversion. fragmented aac streams support up to 46 media segments per download. |
 | spotify (`spotify`) | public single-track links. reads spotify's public embed metadata and tries soundcloud, youtube music, then youtube. uses the audio pipeline for the source that matches. |

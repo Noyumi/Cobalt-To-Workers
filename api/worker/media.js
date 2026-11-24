@@ -2,6 +2,7 @@ import matchAction from "../src/processing/match-action.js";
 import { extract, normalizeURL } from "../src/processing/link.js";
 import { formatResponse } from "../src/processing/response.js";
 import bluesky from "../src/processing/services/bluesky.js";
+import loom from "../src/processing/services/loom.js";
 import newgrounds from "../src/processing/services/newgrounds.js";
 import streamable from "../src/processing/services/streamable.js";
 import soundcloud from "../src/processing/services/soundcloud.js";
@@ -19,6 +20,7 @@ const adapters = {
     streamable: { resolve: streamable, metadataHosts: ["api.streamable.com"] },
     newgrounds: { resolve: newgrounds, metadataHosts: ["www.newgrounds.com", "newgrounds.com"] },
     bsky: { resolve: bluesky, metadataHosts: ["public.api.bsky.app"] },
+    loom: { resolve: loom, metadataHosts: ["www.loom.com"], alwaysProxy: true },
     pinterest: {
         resolve: pinterest,
         metadataHosts: ["pin.it", "pinterest.com", "www.pinterest.com"],
