@@ -7,10 +7,10 @@ import { runFetchWorker } from "$lib/task-manager/runners/fetch";
 
 import type { CobaltPipelineItem } from "$lib/types/workers";
 
-export const killWorker = (worker: Worker, unsubscribe: () => void, interval?: NodeJS.Timeout) => {
+export const killWorker = (worker: Worker, unsubscribe: () => void, timeout?: NodeJS.Timeout) => {
     unsubscribe();
     worker.terminate();
-    if (interval) clearInterval(interval);
+    if (timeout) clearTimeout(timeout);
 }
 
 export const startWorker = async ({ worker, workerId, dependsOn, parentId, workerArgs }: CobaltPipelineItem) => {
@@ -44,7 +44,6 @@ export const startWorker = async ({ worker, workerId, dependsOn, parentId, worke
                     workerArgs.output,
                     worker,
                     device.supports.multithreading,
-                    /*resetStartCounter=*/true,
                 );
             } else {
                 itemError(parentId, workerId, "queue.ffmpeg.no_args");

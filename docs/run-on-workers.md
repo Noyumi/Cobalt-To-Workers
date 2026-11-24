@@ -54,6 +54,7 @@ The session, download API, and tunnel each have a separate per-location rate lim
 | Newgrounds (`newgrounds`) | Streamed video and audio, browser conversion. Disabled by default after live staging requests failed. |
 | Bluesky (`bsky`) | Single images, image pickers, and supported Tenor GIFs |
 | SoundCloud (`soundcloud`) | Public track and short links, original AAC in M4A, browser audio conversion. Fragmented AAC streams support up to 46 media segments per download. |
+| Spotify (`spotify`) | Public single-track links. Reads Spotify's public embed metadata and tries SoundCloud, YouTube Music, then YouTube. Uses the audio pipeline for the source that matches. |
 | YouTube (`youtube`) | Direct audio and video tracks on public videos. When separate tracks are unavailable, the Worker can use a combined MP4 for video or for browser-side audio extraction. Coverage depends on the formats YouTube returns to the Worker. |
 | TikTok (`tiktok`) | Photo posts and short links. Video and audio require a media URL in TikTok's public response. |
 

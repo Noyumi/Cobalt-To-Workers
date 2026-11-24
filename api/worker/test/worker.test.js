@@ -19,6 +19,10 @@ const blueskyLink = "https://bsky.app/profile/example.test/post/gallery";
 const image = "https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:test/photo@jpeg";
 const soundCloudLink = "https://soundcloud.com/artist/track";
 const soundCloudMedia = "https://playback.media-streaming.soundcloud.cloud";
+const spotifyId = "1VsTvfmPwrJxIP5idldxX7";
+const spotifyAmbiguousId = "4cOdK2wGLETKBW3PvgPWqT";
+const spotifyMusicFallbackId = "61k7xAKMsuvTf2j2YnieSi";
+const spotifyVideoFallbackId = "49EHDYNcguttNSuhZl2Hen";
 const youtubeId = "jNQXAC9IVRw";
 const youtubeFallbackId = "GBCzumHmzRk";
 const youtubeCombinedOnlyId = "t1alternate";
@@ -41,6 +45,38 @@ let session;
 let providerSession;
 const providerIP = "203.0.113.31";
 let rateLimits;
+
+function youtubeSearchFixture(query, music) {
+    const artist = { text: "Artist", navigationEndpoint: { browseEndpoint: { browseId: "UCfixture" } } };
+    if (music) {
+        const flexColumn = runs => ({ musicResponsiveListItemFlexColumnRenderer: { text: { runs } } });
+        const title = {
+            text: "Music fallback",
+            navigationEndpoint: { watchEndpoint: {
+                videoId: youtubeId,
+                watchEndpointMusicSupportedConfigs: { watchEndpointMusicConfig: { musicVideoType: "MUSIC_VIDEO_TYPE_ATV" } },
+            } },
+        };
+        const song = { musicResponsiveListItemRenderer: {
+            playlistItemData: { videoId: youtubeId },
+            flexColumns: [flexColumn([title]), flexColumn([artist, { text: " · " }, { text: "0:10" }])],
+        } };
+        const contents = query === "Artist Music fallback" ? [song] : [];
+        return { contents: { tabbedSearchResultsRenderer: { tabs: [{ tabRenderer: {
+            selected: true,
+            content: { sectionListRenderer: { contents: [{ musicShelfRenderer: { contents } }] } },
+        } }] } } };
+    }
+
+    const video = { videoRenderer: {
+        videoId: youtubeId,
+        title: { simpleText: "Video fallback (Official Audio)" },
+        ownerText: { runs: [{ ...artist, text: "Artist - Topic" }] },
+        lengthText: { simpleText: "0:10" },
+    } };
+    const contents = query === "Artist Video fallback" ? [video] : [];
+    return { contents: { sectionListRenderer: { contents: [{ itemSectionRenderer: { contents } }] } } };
+}
 
 function streamableMetadata(url) {
     return Response.json({
@@ -107,10 +143,36 @@ async function mockUpstream(request) {
         }
         case "cdn.bsky.app":
             return new Response("image", { headers: { "Content-Type": "image/jpeg" } });
+        case "open.spotify.com": {
+            const id = url.pathname.split("/").at(-1);
+            assert.equal(url.pathname, "/embed/track/" + id);
+            const name = ({
+                [spotifyAmbiguousId]: "Same Name",
+                [spotifyMusicFallbackId]: "Music fallback",
+                [spotifyVideoFallbackId]: "Video fallback",
+            })[id] ?? "Track";
+            const entity = {
+                id, type: "track", name,
+                artists: [{ name: "Artist" }], duration: name.endsWith("fallback") ? 10000 : 20000,
+            };
+            const json = JSON.stringify({ props: { pageProps: { state: { data: { entity } } } } });
+            return new Response('<script id="__NEXT_DATA__" type="application/json">' + json + '</script>');
+        }
         case "soundcloud.com":
             return new Response('<script>window.__sc_version="1234567890"</script>{"hydratable":"apiClient","data":{"id":"fixture"}}');
         case "api-v2.soundcloud.com":
+            if (url.pathname === "/search/tracks") {
+                const title = url.searchParams.get("q").slice("Artist ".length);
+                if (title.endsWith("fallback")) return Response.json({ collection: [] });
+                const candidate = { id: 1, title, duration: 20000, user: { username: "Artist", verified: true }, permalink_url: soundCloudLink };
+                const other = { ...candidate, id: 2, permalink_url: "https://soundcloud.com/artist/another" };
+                return Response.json({ collection: [
+                    { ...other, title: title === "Track" ? "Track (Live)" : title },
+                    candidate,
+                ] });
+            }
             if (url.pathname === "/resolve") {
+                assert.equal(url.searchParams.get("url"), soundCloudLink);
                 return Response.json({
                     id: 1,
                     title: "Track",
@@ -135,10 +197,14 @@ async function mockUpstream(request) {
             }
             return new Response(url.pathname);
         case "www.youtube.com":
+        case "music.youtube.com":
         case "youtubei.googleapis.com": {
             assert.equal(request.method, "POST");
-            assert.ok(url.pathname.endsWith("/player"));
             const body = await request.json();
+            if (url.pathname.endsWith("/search")) {
+                return Response.json(youtubeSearchFixture(body.query, body.context.client.clientName === "WEB_REMIX"));
+            }
+            assert.ok(url.pathname.endsWith("/player"));
             if (body.videoId === youtubeFallbackId || body.videoId === youtubeCombinedOnlyId) {
                 const android = body.context.client.clientName === "ANDROID";
                 const combinedOnly = body.videoId === youtubeCombinedOnlyId;
@@ -326,7 +392,7 @@ test("advertises browser conversion, configured services, and frontend CORS", as
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("access-control-allow-origin"), frontend);
     const { cobalt } = await response.json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "bluesky", "soundcloud", "youtube", "tiktok"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "bluesky", "soundcloud", "spotify", "youtube", "tiktok"]));
     assert.equal(cobalt.localProcessingRequired, true);
     assert.equal(cobalt.turnstileSitekey, settings.TURNSTILE_SITEKEY);
 
@@ -445,6 +511,34 @@ test("streams SoundCloud's unencrypted AAC fragments in order for local processi
     assert.equal((await send(encrypted)).status, 502);
 });
 
+test("matches single Spotify tracks to SoundCloud and rejects ambiguous recordings", async () => {
+    const url = "https://open.spotify.com/intl-en/track/" + spotifyId + "?si=share";
+    const response = await download({ url, audioFormat: "best" }, null, providerIP);
+    const track = await response.json();
+    assert.equal(track.status, "local-processing", JSON.stringify(track));
+    assert.equal(track.service, "soundcloud");
+    assert.equal(track.output.metadata.artist, "Artist");
+    assert.equal(track.audio.format, "m4a");
+    assert.equal(track.audio.copy, true);
+    assert.equal(await (await send(track.tunnel[0])).text(), "/initial.mp4/a.m4s/b.m4s");
+
+    await checkError(await download({ url: "https://open.spotify.com/track/" + spotifyAmbiguousId }, null, providerIP),
+        "error.api.spotify.no_match");
+    await checkError(await download({ url: "https://open.spotify.com/playlist/" + spotifyId }, null, providerIP),
+        "error.api.link.unsupported");
+});
+
+test("falls back from Spotify to YouTube Music and YouTube without requiring video verification", async () => {
+    for (const id of [spotifyMusicFallbackId, spotifyVideoFallbackId]) {
+        const response = await download({ url: "https://open.spotify.com/track/" + id }, null, providerIP);
+        const track = await response.json();
+        assert.equal(track.status, "local-processing", JSON.stringify(track));
+        assert.equal(track.service, "youtube");
+        assert.equal(track.audio.format, "mp3");
+        assert.equal(await (await send(track.tunnel[0])).text(), "/audio");
+    }
+});
+
 test("selects direct YouTube tracks for merge and for audio, and rejects login-required videos", async () => {
     const url = "https://youtu.be/" + youtubeId;
     const merged = await (await download({ url, videoQuality: "720" }, providerSession, providerIP)).json();
@@ -554,7 +648,7 @@ test("redeems a tunnel in another Worker isolate", async () => {
     assert.equal(await response.text(), "media");
 
     const { cobalt } = await (await second.fetch(api)).json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "soundcloud", "youtube", "tiktok"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "soundcloud", "spotify", "youtube", "tiktok"]));
 });
 
 test("rejects an expired tunnel with a valid signature", async ({ mock }) => {

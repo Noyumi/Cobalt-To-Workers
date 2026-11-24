@@ -54,9 +54,22 @@ const findBestForPreset = (transcodings, preset) => {
     return inferior;
 }
 
+export async function searchSoundCloudTracks(query, fetcher) {
+    const clientId = await findClientID(fetcher);
+    if (!clientId) return;
+
+    const url = new URL("https://api-v2.soundcloud.com/search/tracks");
+    url.search = new URLSearchParams({ q: query, limit: "16", client_id: clientId });
+    const data = await fetcher(url)
+        .then(response => response.ok ? response.json() : undefined)
+        .catch(() => undefined);
+
+    if (Array.isArray(data?.collection)) return { clientId, tracks: data.collection };
+}
+
 export default async function(obj) {
     const { fetcher = fetch, resolveRedirectingURL, durationLimit, fragmentedAAC } = obj;
-    const clientId = await findClientID(fetcher);
+    const clientId = obj.clientId ?? await findClientID(fetcher);
     if (!clientId) return { error: "fetch.fail" };
 
     let link;
@@ -86,6 +99,7 @@ export default async function(obj) {
 
     const json = await fetcher(resolveURL).then(r => r.json()).catch(() => {});
     if (!json) return { error: "fetch.fail" };
+    if (obj.trackId !== undefined && json.id !== obj.trackId) return { error: "spotify.no_match" };
 
     if (json.duration > durationLimit * 1000) {
         return { error: "content.too_long" };

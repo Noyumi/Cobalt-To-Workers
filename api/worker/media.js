@@ -6,10 +6,13 @@ import newgrounds from "../src/processing/services/newgrounds.js";
 import streamable from "../src/processing/services/streamable.js";
 import soundcloud from "../src/processing/services/soundcloud.js";
 import tiktok from "../src/processing/services/tiktok.js";
+import spotify from "./spotify.js";
 import { createTunnel, fetchFollowingRedirects, isMediaURLAllowed } from "./tunnel.js";
 
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36";
 const durationLimit = 10800;
+const soundCloudHosts = ["soundcloud.com", "www.soundcloud.com", "on.soundcloud.com", "api-v2.soundcloud.com", "a-v2.sndcdn.com"];
+const youtubeHosts = ["www.youtube.com", "youtubei.googleapis.com"];
 
 const adapters = {
     streamable: { resolve: streamable, metadataHosts: ["api.streamable.com"] },
@@ -17,18 +20,33 @@ const adapters = {
     bsky: { resolve: bluesky, metadataHosts: ["public.api.bsky.app"] },
     soundcloud: {
         resolve: soundcloud,
-        metadataHosts: ["soundcloud.com", "www.soundcloud.com", "on.soundcloud.com", "api-v2.soundcloud.com", "a-v2.sndcdn.com"],
+        metadataHosts: soundCloudHosts,
+    },
+    spotify: {
+        resolve: spotify,
+        metadataHosts: ["open.spotify.com", ...soundCloudHosts, ...youtubeHosts, "music.youtube.com"],
     },
     youtube: {
         resolve: async options => (await import("./youtube.js")).default(options),
-        metadataHosts: ["www.youtube.com", "youtubei.googleapis.com"],
+        metadataHosts: youtubeHosts,
     },
     tiktok: { resolve: tiktok, metadataHosts: ["www.tiktok.com", "tiktok.com", "vt.tiktok.com"] },
 };
 
 export function enabledServices(disabled = "") {
     const excluded = new Set(disabled.split(",").map(service => service.trim()));
+    if (excluded.has("soundcloud") && excluded.has("youtube")) excluded.add("spotify");
     return new Set(Object.keys(adapters).filter(service => !excluded.has(service)));
+}
+
+export function extractMediaLink(url, services) {
+    if (url.hostname !== "open.spotify.com") return extract(url, services);
+    if (!services.has("spotify")) return { error: "service.disabled" };
+
+    const id = /^\/(?:intl-[a-z-]+\/)?track\/([A-Za-z0-9]{22})$/.exec(url.pathname)?.[1];
+    return id
+        ? { host: "spotify", patternMatch: { id } }
+        : { error: "link.unsupported", context: { service: "spotify" } };
 }
 
 function mediaURL(service, value) {
@@ -41,6 +59,7 @@ function mediaURL(service, value) {
 
 export async function resolveMedia({ host, patternMatch }, params, env, verified) {
     const adapter = adapters[host];
+    let mediaService = host;
     const signal = AbortSignal.timeout(12_000);
     const metadataAllowed = target => target.protocol === "https:" && !target.port && !target.username && !target.password
         && adapter.metadataHosts.includes(target.hostname);
@@ -64,9 +83,9 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         if (parsed.host === host) return parsed.patternMatch;
     }
 
-    async function probeMedia(url, contentLength) {
+    async function probeMedia(url, contentLength, service = host) {
         const target = URL.parse(url);
-        const allowed = target => isMediaURLAllowed(host, target);
+        const allowed = target => isMediaURLAllowed(service, target);
         if (!target || !allowed(target)) return false;
         const length = contentLength ?? Number(target.searchParams.get("clen"));
         const hasLength = Number.isSafeInteger(length) && length > 0;
@@ -93,7 +112,7 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
 
     let audioManifest;
 
-    const createStream = ({ filename, url, service = host }) => {
+    const createStream = ({ filename, url, service = mediaService }) => {
         const target = mediaURL(service, url);
         return createTunnel({
             filename,
@@ -105,7 +124,7 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
 
     async function createResponse(type, data) {
         if (type === "redirect") {
-            return formatResponse(type, { ...data, url: mediaURL(host, data.url) });
+            return formatResponse(type, { ...data, url: mediaURL(mediaService, data.url) });
         }
         if (type === "tunnel") {
             return formatResponse(type, data, { url: await createStream(data) });
@@ -136,6 +155,7 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         durationLimit,
         format: params.audioFormat,
         fragmentedAAC: host === "soundcloud",
+        audioServices: host === "spotify" ? enabledServices(env.DISABLED_SERVICES) : undefined,
         includeCover: false,
         resolveRedirectingURL,
         fullAudio: params.tiktokFullAudio,
@@ -148,7 +168,8 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         return formatResponse("error", { code: `error.api.${result.error}`, context });
     }
 
-    const isAudioOnly = host === "soundcloud" || result.isAudioOnly || params.downloadMode === "audio";
+    mediaService = result.mediaService ?? host;
+    const isAudioOnly = mediaService === "soundcloud" || result.isAudioOnly || params.downloadMode === "audio";
     const hasVideo = result.picker
         ? result.picker.some(item => item.type === "video")
         : !result.isPhoto && !isAudioOnly && !(result.isGif && params.convertGif);
@@ -156,8 +177,8 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         return formatResponse("error", { code: "error.api.auth.jwt.missing" });
     }
 
-    if (host === "soundcloud" && result.isHLS) {
-        audioManifest = mediaURL(host, result.urls);
+    if (mediaService === "soundcloud" && result.isHLS) {
+        audioManifest = mediaURL(mediaService, result.urls);
         result.isHLS = false;
     }
     if (host === "tiktok" && result.picker) {
@@ -166,10 +187,10 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
 
     return await matchAction({
         r: result,
-        host,
+        host: mediaService,
         audioFormat: params.audioFormat,
         isAudioOnly,
-        isAudioMuted: host !== "soundcloud" && !result.isAudioOnly && params.downloadMode === "mute",
+        isAudioMuted: mediaService !== "soundcloud" && !result.isAudioOnly && params.downloadMode === "mute",
         disableMetadata: params.disableMetadata,
         filenameStyle: params.filenameStyle,
         convertGif: params.convertGif,

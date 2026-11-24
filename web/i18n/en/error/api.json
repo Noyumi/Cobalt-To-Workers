@@ -52,6 +52,7 @@
     "content.post.private": "couldn't get anything about this post because it's from a private account. try a different link!",
     "content.post.age": "this post is age-restricted, so i can't access it anonymously. try again or try a different link!",
 
+    "spotify.no_match": "couldn't find a clear match for this spotify track on soundcloud or youtube. if you have a link to the recording, try pasting it directly.",
     "youtube.no_matching_format": "youtube didn't return any acceptable formats. cobalt may not support them or they're re-encoding on youtube's side. try again a bit later, but if this issue sticks, please report it!",
     "youtube.decipher": "youtube updated its decipher algorithm and i couldn't extract the info about the video. try again in a few seconds, but if this issue sticks, please report it!",
     "youtube.login": "couldn't get this video because youtube asked the processing instance to prove that it's not a bot. try again in a few seconds, but if it still doesn't work, please report this issue!",

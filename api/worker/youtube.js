@@ -14,12 +14,40 @@ function bestVideo(formats, quality) {
     return sorted.find(format => Math.min(format.height, format.width) <= quality) ?? sorted.at(-1);
 }
 
-export default async function youtube({ id, fetcher, probeMedia, isAudioOnly, isAudioMuted, params, durationLimit }) {
-    const client = await Innertube.create({
+function createClient(fetcher) {
+    return Innertube.create({
         fetch: fetcher,
         generate_session_locally: true,
         retrieve_player: false,
     });
+}
+
+export async function* searchYoutubeAudio(query, fetcher) {
+    const client = await createClient(fetcher);
+    const music = await client.music.search(query, { type: "song" }).catch(() => undefined);
+    yield (music?.contents ?? []).flatMap(shelf => shelf.contents ?? [])
+        .filter(result => result.item_type === "song")
+        .slice(0, 12)
+        .map(result => ({
+            id: result.id,
+            title: result.title,
+            artists: result.artists?.map(artist => artist.name) ?? [],
+            duration: result.duration?.seconds,
+        }));
+
+    const search = await client.search(query, { type: "video" }).catch(() => undefined);
+    yield (search?.results ?? []).filter(result => result.type === "Video" && !result.is_live && !result.is_upcoming)
+        .slice(0, 12)
+        .map(result => ({
+            id: result.video_id,
+            title: result.title.toString(),
+            artists: [result.author?.name?.replace(/\s+-\s+Topic$/i, "")],
+            duration: result.duration?.seconds,
+        }));
+}
+
+export default async function youtube({ id, fetcher, probeMedia, isAudioOnly, isAudioMuted, params, durationLimit, validateDuration }) {
+    const client = await createClient(fetcher);
 
     const getInfo = name => client.getBasicInfo(id, { client: name }).catch(() => undefined);
     const isPlayable = result => result?.playability_status?.status === "OK" && result.basic_info?.id === id;
@@ -33,6 +61,7 @@ export default async function youtube({ id, fetcher, probeMedia, isAudioOnly, is
     const filenameAttributes = { service: "youtube", id, title: metadata.title, author: metadata.artist };
     if (info.basic_info.is_live) return { error: "content.video.live" };
     if (info.basic_info.duration > durationLimit) return { error: "content.too_long" };
+    if (validateDuration && !validateDuration(info.basic_info.duration)) return { error: "content.video.unavailable" };
 
     const isDirect = format => Boolean(format.url && !format.drm_families?.length);
     const muxedMp4 = formats => (formats ?? []).filter(format => isDirect(format)

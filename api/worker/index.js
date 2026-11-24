@@ -1,10 +1,9 @@
 import ipaddr from "ipaddr.js";
 import apiPackage from "../package.json";
-import { extract } from "../src/processing/link.js";
 import { normalizeRequest } from "../src/processing/schema.js";
 import { friendlyServiceName } from "../src/processing/service-alias.js";
 import { createSession, verifySession } from "./auth.js";
-import { enabledServices, resolveMedia } from "./media.js";
+import { enabledServices, extractMediaLink, resolveMedia } from "./media.js";
 import { handleTunnel } from "./tunnel.js";
 
 const jsonType = /^application\/json(?:;\s*charset=utf-8)?$/i;
@@ -133,7 +132,7 @@ async function handleRequest(request, env) {
     const input = await normalizeRequest(body);
     if (!input.success) return error("invalid_body");
 
-    const parsed = extract(input.data.url, enabledServices(env.DISABLED_SERVICES));
+    const parsed = extractMediaLink(input.data.url, enabledServices(env.DISABLED_SERVICES));
     if (parsed.error) return error(parsed.error, 400, parsed.context);
 
     try {
