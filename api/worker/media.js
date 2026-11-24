@@ -7,6 +7,7 @@ import newgrounds from "../src/processing/services/newgrounds.js";
 import streamable from "../src/processing/services/streamable.js";
 import soundcloud from "../src/processing/services/soundcloud.js";
 import tiktok from "../src/processing/services/tiktok.js";
+import instagram from "./instagram.js";
 import pinterest from "./pinterest.js";
 import spotify from "./spotify.js";
 import { createTunnel, fetchFollowingRedirects, isMediaURLAllowed } from "./tunnel.js";
@@ -20,6 +21,12 @@ const adapters = {
     streamable: { resolve: streamable, metadataHosts: ["api.streamable.com"] },
     newgrounds: { resolve: newgrounds, metadataHosts: ["www.newgrounds.com", "newgrounds.com"] },
     bsky: { resolve: bluesky, metadataHosts: ["public.api.bsky.app"] },
+    instagram: {
+        resolve: instagram,
+        metadataHosts: ["www.instagram.com", "instagram.com"],
+        alwaysProxy: true,
+        tunnelPicker: true,
+    },
     loom: { resolve: loom, metadataHosts: ["www.loom.com"], alwaysProxy: true },
     pinterest: {
         resolve: pinterest,
@@ -136,6 +143,15 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         }
         if (type === "tunnel") {
             return formatResponse(type, data, { url: await createStream(data) });
+        }
+        if (type === "picker" && adapter.tunnelPicker) {
+            const picker = await Promise.all(data.picker.map(async item => {
+                const url = await createStream(item);
+                const thumb = item.thumb === item.url ? url
+                    : item.thumb && await createStream({ url: item.thumb });
+                return { type: item.type, url, thumb };
+            }));
+            return formatResponse(type, { ...data, picker });
         }
         if (type === "local-processing") {
             const inputs = [data.url].flat();

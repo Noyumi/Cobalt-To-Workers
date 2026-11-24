@@ -392,7 +392,7 @@ test("advertises browser conversion, configured services, and frontend CORS", as
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("access-control-allow-origin"), frontend);
     const { cobalt } = await response.json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "bluesky", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "bluesky", "instagram", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok"]));
     assert.equal(cobalt.localProcessingRequired, true);
     assert.equal(cobalt.turnstileSitekey, settings.TURNSTILE_SITEKEY);
 
@@ -488,7 +488,7 @@ test("returns Bluesky picker images and reports unsupported video and services",
 
     await checkError(await download({ url: blueskyLink.replace("gallery", "video") }),
         "error.api.service.workers_hls_unavailable");
-    await checkError(await download({ url: "https://www.instagram.com/p/ABCDE/" }),
+    await checkError(await download({ url: "https://www.vimeo.com/12345" }),
         "error.api.service.disabled");
 });
 
@@ -648,7 +648,7 @@ test("redeems a tunnel in another Worker isolate", async () => {
     assert.equal(await response.text(), "media");
 
     const { cobalt } = await (await second.fetch(api)).json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "instagram", "loom", "pinterest", "soundcloud", "spotify", "youtube", "tiktok"]));
 });
 
 test("rejects an expired tunnel with a valid signature", async ({ mock }) => {
