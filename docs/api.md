@@ -160,7 +160,7 @@ all keys in this table are optional.
 | `status`        | `string` | `picker`                                                                                       |
 | `audio`         | `string` | returned when an image slideshow (such as on tiktok) has a general background audio (optional) |
 | `audioFilename` | `string` | cobalt-generated filename, returned if `audio` exists (optional)                               |
-| `audioAvailable` | `boolean` | on Workers, resolve the same post with `downloadMode: "audio"` to get its audio (optional)    |
+| `audioAvailable` | `boolean` | on workers, resolve the same post with `downloadMode: "audio"` to get its audio (optional)    |
 | `picker`        | `array`  | array of objects containing the individual media                                               |
 
 #### picker object

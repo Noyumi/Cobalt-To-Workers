@@ -1,4 +1,4 @@
-# Cobalt-To-Workers frontend
+# cobalt-to-workers frontend
 the frontend is a static web app built with
 [sveltekit](https://kit.svelte.dev/) + [vite](https://vitejs.dev/).
 

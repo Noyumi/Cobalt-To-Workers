@@ -1,10 +1,10 @@
-# Cobalt-To-Workers
+# cobalt-to-workers
 
-Cobalt-To-Workers is a noncommercial Cobalt fork for Cloudflare Workers Free. One Worker serves the SvelteKit site and a second resolves media links and streams downloads. The browser handles conversion with LibAV.
+cobalt-to-workers is a noncommercial cobalt fork for cloudflare workers free. one worker serves the sveltekit site and a second resolves media links and streams downloads. the browser handles conversion with libav.
 
-See [setup, service coverage, and deployment](docs/run-on-workers.md). The material below describes the upstream Cobalt project.
+see [setup, service coverage, and deployment](docs/run-on-workers.md). the material below describes the upstream cobalt project.
 
-## Upstream Cobalt
+## upstream cobalt
 
 cobalt is a media downloader that doesn't piss you off. it's friendly, efficient, and doesn't have ads, trackers, paywalls or other nonsense.
 
