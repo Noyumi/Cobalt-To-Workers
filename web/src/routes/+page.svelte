@@ -1,0 +1,72 @@
+<script>
+    import { projectName } from "$lib/env";
+    import { t } from "$lib/i18n/translations";
+
+    import Omnibox from "$components/save/Omnibox.svelte";
+    import SupportedServices from "$components/save/SupportedServices.svelte";
+</script>
+
+<svelte:head>
+    <title>{projectName}</title>
+    <meta property="og:title" content={projectName} />
+</svelte:head>
+
+<div id="cobalt-save-container" class="center-column-container">
+    <SupportedServices />
+    <main
+        id="cobalt-save"
+        tabindex="-1"
+        data-first-focus
+    >
+        <h1>{projectName}</h1>
+        <Omnibox />
+    </main>
+    <div id="terms-note">
+        {$t("save.terms.note.agreement")}
+        <a href="/about/terms">{$t("save.terms.note.link")}</a>
+    </div>
+</div>
+
+<style>
+    #cobalt-save-container {
+        padding: var(--padding);
+        overflow: hidden;
+    }
+
+    #cobalt-save {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        gap: 15px;
+    }
+
+    h1 {
+        margin: 0 0 4px;
+        font-size: clamp(21px, 5vw, 31px);
+        font-weight: 500;
+        text-align: center;
+    }
+
+    #terms-note {
+        bottom: 0;
+        color: var(--gray);
+        font-size: 12px;
+        text-align: center;
+        padding-bottom: 6px;
+        font-weight: 500;
+    }
+
+    @media screen and (max-width: 535px) {
+        #cobalt-save-container {
+            padding-top: calc(var(--padding) / 2);
+        }
+
+        #terms-note {
+            font-size: 11px;
+            padding-bottom: 0;
+        }
+    }
+</style>

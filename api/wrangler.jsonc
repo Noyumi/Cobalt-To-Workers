@@ -1,0 +1,33 @@
+{
+    "name": "cobalt-to-workers-api",
+    "main": "./worker/index.js",
+    "compatibility_date": "2026-11-24",
+    "minify": true,
+    "keep_vars": true,
+    "vars": {
+        "DISABLED_SERVICES": "newgrounds"
+    },
+    "ratelimits": [
+        {
+            "name": "SESSION_LIMITER",
+            "namespace_id": "1001",
+            "simple": { "limit": 10, "period": 60 }
+        },
+        {
+            "name": "API_LIMITER",
+            "namespace_id": "1002",
+            "simple": { "limit": 20, "period": 60 }
+        },
+        {
+            "name": "TUNNEL_LIMITER",
+            "namespace_id": "1003",
+            "simple": { "limit": 40, "period": 60 }
+        }
+    ],
+    "observability": {
+        "logs": {
+            "enabled": true,
+            "invocation_logs": false
+        }
+    }
+}

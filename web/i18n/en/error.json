@@ -1,0 +1,12 @@
+{
+    "import.no_data": "there are no settings to load from this file. are you sure it's the right one?",
+    "import.invalid": "This file does not contain compatible settings.",
+    "import.unknown": "couldn't load data from the file. it may be corrupted or of wrong format. here's the error i got:\n\n{{ value }}",
+
+    "tunnel.probe": "The download link could not be opened. Try requesting it again, or check your browser and network settings.",
+
+    "captcha_too_long": "verification timed out. try the download again.",
+    "captcha_failed": "couldn't load the verification. try the download again.",
+
+    "pipeline.missing_response_data": "the processing instance didn't return required file info, so i can't create a local processing pipeline for you. try again in a few seconds and report the issue if it sticks!"
+}
