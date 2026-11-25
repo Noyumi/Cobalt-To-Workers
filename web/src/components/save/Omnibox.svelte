@@ -16,6 +16,8 @@
     import type { Optional } from "$lib/types/generic";
     import type { DownloadModeOption } from "$lib/types/settings";
 
+    import IconVideo from "@tabler/icons-svelte/IconVideo.svelte";
+
     import ClearButton from "$components/save/buttons/ClearButton.svelte";
     import DownloadButton from "$components/save/buttons/DownloadButton.svelte";
 
@@ -185,6 +187,14 @@
             <SettingsButton
                 settingContext="save"
                 settingId="downloadMode"
+                settingValue="video"
+            >
+                <IconVideo color="var(--blue)" />
+                {$t("save.video")}
+            </SettingsButton>
+            <SettingsButton
+                settingContext="save"
+                settingId="downloadMode"
                 settingValue="audio"
             >
                 <IconMusic />
@@ -336,6 +346,18 @@
 
         #action-container :global(.button) {
             width: 100%;
+        }
+
+        #action-container :global(.switcher > .button) {
+            flex: 1 0 auto;
+            width: auto;
+            gap: 4px;
+            padding-inline: 6px;
+        }
+
+        #action-container :global(.switcher > .button svg) {
+            width: 18px;
+            height: 18px;
         }
 
         #paste-mobile-text {

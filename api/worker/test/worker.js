@@ -147,6 +147,19 @@ async function mockUpstream(request) {
         }
         case "cdn.bsky.app":
             return new Response("image", { headers: { "Content-Type": "image/jpeg" } });
+        case "cdn.syndication.twimg.com":
+            return Response.json({
+                id_str: url.searchParams.get("id"),
+                mediaDetails: [
+                    { type: "photo", media_url_https: "https://pbs.twimg.com/media/example.jpg" },
+                    {
+                        type: "video",
+                        video_info: {
+                            variants: [{ content_type: "video/mp4", url: "https://video.twimg.com/example.mp4" }],
+                        },
+                    },
+                ],
+            });
         case "open.spotify.com": {
             const id = url.pathname.split("/").at(-1);
             assert.equal(url.pathname, "/embed/track/" + id);
@@ -458,6 +471,26 @@ test("resolves direct downloads and sends audio conversion to the browser", asyn
     assert.equal(file.tunnel.length, 1);
     const input = await send(file.tunnel[0]);
     assert.equal(await input.text(), "media");
+});
+
+test("video mode keeps video downloads and filters out other media", async () => {
+    const ip = "203.0.113.43";
+    const { token } = await (await turnstile("valid", ip)).json();
+    const video = { url: streamableLink, downloadMode: "video" };
+    await checkError(await download(video, null, ip), "error.api.auth.jwt.missing");
+    assert.deepEqual(await (await download(video, token, ip)).json(), {
+        status: "redirect", url: media, filename: "streamable_demo_1280x720.mp4",
+    });
+
+    for (const url of [blueskyLink, soundCloudLink]) {
+        await checkError(await download({ url, downloadMode: "video" }, null, ip), "error.api.content.video.missing");
+    }
+
+    const url = "https://x.com/example/status/12345";
+    const auto = await (await download({ url }, token, ip)).json();
+    assert.deepEqual(auto.picker.map(item => item.type), ["photo", "video"]);
+    const selected = await (await download({ url, downloadMode: "video" }, token, ip)).json();
+    assert.deepEqual(selected.picker.map(item => item.type), ["video"]);
 });
 
 test("rejects invalid request bodies before contacting a service", async () => {

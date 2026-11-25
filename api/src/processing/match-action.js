@@ -6,6 +6,15 @@ import { convertLanguageCode } from "../misc/language-codes.js";
 
 const extraProcessingTypes = new Set(["merge", "remux", "mute", "audio", "gif"]);
 
+export function selectVideo(result, isAudioOnly) {
+    if (result.picker) {
+        const picker = result.picker.filter(item => item.type === "video");
+        return picker.length ? { ...result, picker } : undefined;
+    }
+
+    if (!isAudioOnly && !result.isPhoto && !result.isGif) return result;
+}
+
 export default async function({
     r,
     host,

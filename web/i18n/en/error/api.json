@@ -40,6 +40,7 @@
     "content.too_long": "media you requested is too long. the duration limit on this instance is {{ limit }} minutes. try something shorter instead!",
 
     "content.video.unavailable": "i can't access this video. it may be restricted on {{ service }}'s side. try a different link!",
+    "content.video.missing": "this link has no downloadable video. try auto for other media.",
     "content.video.live": "this video is currently live, so i can't download it yet. wait for the live stream to finish and try again!",
     "content.video.private": "this video is private, so i can't access it. change its visibility or try another one!",
     "content.video.age": "this video is age-restricted, so i can't access it anonymously. try again or try a different link!",

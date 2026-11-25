@@ -7,7 +7,7 @@ import { updateCookie } from "./cookie/manager.js";
 import { createResponse } from "../processing/request.js";
 
 import { testers } from "./service-patterns.js";
-import matchAction from "./match-action.js";
+import matchAction, { selectVideo } from "./match-action.js";
 
 import { friendlyServiceName } from "./service-alias.js";
 
@@ -319,6 +319,11 @@ export default async function({ host, patternMatch, params, authType }) {
                 code: `error.api.${r.error}`,
                 context,
             })
+        }
+
+        if (params.downloadMode === "video") {
+            r = selectVideo(r, isAudioOnly);
+            if (!r) return createResponse("error", { code: "error.api.content.video.missing" });
         }
 
         let localProcessing = params.localProcessing;

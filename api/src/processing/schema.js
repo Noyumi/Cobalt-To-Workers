@@ -15,7 +15,7 @@ export const apiSchema = z.object({
     ).default("mp3"),
 
     downloadMode: z.enum(
-        ["auto", "audio", "mute"]
+        ["auto", "video", "audio", "mute"]
     ).default("auto"),
 
     filenameStyle: z.enum(

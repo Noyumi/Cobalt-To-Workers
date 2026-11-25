@@ -1,4 +1,4 @@
-import matchAction from "../src/processing/match-action.js";
+import matchAction, { selectVideo } from "../src/processing/match-action.js";
 import { extract, normalizeURL } from "../src/processing/link.js";
 import { formatResponse } from "../src/processing/response.js";
 import bluesky from "../src/processing/services/bluesky.js";
@@ -195,7 +195,7 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
     }
 
     const alwaysProxy = adapter.alwaysProxy || params.alwaysProxy || params.localProcessing === "forced";
-    const result = await adapter.resolve({
+    let result = await adapter.resolve({
         ...patternMatch,
         url: params.url,
         isAudioOnly: params.downloadMode === "audio",
@@ -226,6 +226,11 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
 
     const mediaService = result.mediaService ?? host;
     const isAudioOnly = mediaService === "soundcloud" || result.isAudioOnly || params.downloadMode === "audio";
+    if (params.downloadMode === "video") {
+        result = selectVideo(result, isAudioOnly);
+        if (!result) return formatResponse("error", { code: "error.api.content.video.missing" });
+    }
+
     const hasVideo = result.picker
         ? result.picker.some(item => item.type === "video")
         : !result.isPhoto && !isAudioOnly && !(result.isGif && params.convertGif);

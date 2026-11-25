@@ -86,13 +86,15 @@ all keys except for `url` are optional. value options are separated by `/`.
 | `url`             | `string`  | source URL                                                      | *required* |
 | `audioBitrate`    | `string`  | `320 / 256 / 128 / 96 / 64 / 8` (kbps)                          | `128`      |
 | `audioFormat`     | `string`  | `best / mp3 / ogg / wav / opus`                                 | `mp3`      |
-| `downloadMode`    | `string`  | `auto / audio / mute`                                           | `auto`     |
+| `downloadMode`    | `string`  | `auto / video / audio / mute`                                   | `auto`     |
 | `filenameStyle`   | `string`  | `classic / pretty / basic / nerdy`                              | `basic`    |
 | `videoQuality`    | `string`  | `max / 4320 / 2160 / 1440 / 1080 / 720 / 480 / 360 / 240 / 144` | `1080`     |
 | `disableMetadata` | `boolean` | title, artist, and other info will not be added to the file     | `false`    |
 | `alwaysProxy`     | `boolean` | always tunnel all files, even when not necessary                | `false`    |
 | `localProcessing` | `string`  | `disabled / preferred / forced`                                 | `disabled` |
 | `subtitleLang`    | `string`  | any valid ISO 639-1 language code                               | *none*     |
+
+`video` keeps audio when available and filters mixed posts to video items. `mute` removes the audio from a video.
 
 #### service-specific options
 | key                     | type      | description/value                                 | default |
