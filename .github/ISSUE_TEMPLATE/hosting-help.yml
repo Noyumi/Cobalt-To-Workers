@@ -1,14 +1,16 @@
-name: instance hosting help
-description: ask any question regarding cobalt instance hosting
+name: workers hosting help
+description: ask for help running cobalt-to-workers locally or on cloudflare
 labels: ["instance hosting help"]
 body:
+  - type: markdown
+    attributes:
+      value: start with the [workers setup guide](https://github.com/Noyumi/Cobalt-To-Workers/blob/main/docs/run-on-workers.md). redact secret values, cookies, and signed download urls before pasting anything here.
   - type: textarea
     id: problem-description
     attributes:
       label: problem description
       description: |
-        describe what issue you're having, clearly and concisely.
-        support your description with screenshots/links/etc when needed.
+        include the setup step, the command you ran, and the error you saw.
     validations:
       required: true
   - type: textarea
@@ -16,6 +18,5 @@ body:
     attributes:
       label: your instance configuration
       description: |
-        if applicable, add or describe your instance configuration (e.g. compose file) or any changes you made to it.
-        please **do not share senstive information** such as secret keys or the contents of your cookies file!
-      render: shell
+        include public settings from your wrangler config and the names of any relevant bindings.
+        mention whether the issue is in the frontend worker or the api worker.

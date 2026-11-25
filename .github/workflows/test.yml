@@ -1,54 +1,29 @@
-name: Run tests
+name: Workers checks
 
-on:
-  pull_request:
-  push:
+on: [pull_request, push]
+
+permissions:
+  contents: read
 
 jobs:
-  check-lockfile:
-    name: check lockfile correctness
+  workers:
+    name: Workers tests and frontend build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+          node-version: '24'
       - uses: pnpm/action-setup@v4
-      - name: Check that lockfile does not need an update
-        run: pnpm install --frozen-lockfile
-
-  test-web:
-    name: web sanity check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - uses: pnpm/action-setup@v4
-      - run: .github/test.sh web
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Test the API Worker
+        run: pnpm test:workers
+      - name: Check and build the frontend
         env:
-          WEB_DEFAULT_API: https://api.dummy.example/
-
-  test-api:
-    name: api sanity check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - uses: pnpm/action-setup@v4
-      - run: .github/test.sh api
-
-  test-workers:
-    name: Workers runtime tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm test:workers
+          WEB_DEFAULT_API: https://api.example.test
+        run: |
+          pnpm --filter @imput/cobalt-web check
+          pnpm --filter @imput/cobalt-web build

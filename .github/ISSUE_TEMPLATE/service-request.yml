@@ -1,14 +1,11 @@
 name: service request
-description: "request service support in cobalt"
+description: request a new download provider for cobalt-to-workers
 title: "add support for [service name]"
 labels: ["service request"]
 body:
   - type: markdown
     attributes:
-      value: |
-        thanks for taking the time to make a service request!
-        before you start, please make to read the "adding features or support for services" section of
-        our [contributor guidelines](https://github.com/imputnet/cobalt/blob/main/CONTRIBUTING.md#adding-features-or-support-for-services) to make sure your request is a good fit for cobalt.
+      value: check the [supported services](https://github.com/Noyumi/Cobalt-To-Workers/blob/main/docs/run-on-workers.md#what-you-can-download) and [contributor guide](https://github.com/Noyumi/Cobalt-To-Workers/blob/main/CONTRIBUTING.md#adding-a-service). requests should use freely accessible public media.
   - type: input
     id: service-name
     attributes:
@@ -19,7 +16,7 @@ body:
     id: service-description
     attributes:
       label: service description
-      description: a brief description of what the service is and/or what it provides
+      description: describe the service and which media types you'd like to save.
     validations:
       required: true
   - type: textarea
@@ -27,13 +24,11 @@ body:
     attributes:
       label: link samples
       description: |
-        list of links that cobalt should recognize.
-        could be regular video link, shared video link, mobile video link, shortened link, etc.
-      render: shell
+        add public links that show what should work. include a short or share link if the service has one.
     validations:
       required: true
   - type: textarea
     id: more-context
     attributes:
       label: additional context
-      description: any additional context or screenshots should go here.
+      description: add anything else that helps explain the expected download.

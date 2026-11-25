@@ -1,47 +1,55 @@
 name: bug report
-description: report a global issue with the cobalt codebase
+description: report a bug with obscure.lol or your own workers instance
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: use public media links. redact secrets, cookies, account details, and signed download urls from logs or screenshots.
+  - type: dropdown
+    id: instance
+    attributes:
+      label: where did it happen?
+      options:
+        - obscure.lol
+        - my own cloudflare workers instance
+        - local development
+    validations:
+      required: true
   - type: textarea
     id: bug-description
     attributes:
       label: bug description
-      description: "clear and concise description of what the issue is."
+      description: what did you expect, and what happened?
     validations:
       required: true
   - type: textarea
     id: repro-steps
     attributes:
       label: reproduction steps
-      description: steps to reproduce the described behavior.
-      placeholder: |
-        1. go to '...'
-        2. click on '....'
-        3. download [media type] from [service]
-        4. see error
+      description: include the mode you tried and the error you saw.
+      placeholder: paste a link, choose video, then press download.
     validations:
       required: true
   - type: textarea
     id: screenshots
     attributes:
       label: screenshots
-      description: if applicable, add screenshots or screen recordings to support your explanation.
+      description: add a screenshot or short recording if it shows the bug.
   - type: textarea
     id: links
     attributes:
-      label: links
-      description: if applicable, add links that cause the issue. more = better.
-      render: shell
+      label: public example links
+      description: add a public media link that reproduces the bug.
   - type: input
     id: platform
     attributes:
       label: platform information
-      description: "the operating system, browser and their versions where you encounter the issue"
-      placeholder: safari 7 on mac os x 10.8
+      description: include your browser and operating system versions.
+      placeholder: edge on windows 11
     validations:
       required: true
   - type: textarea
     id: more-context
     attributes:
       label: additional context
-      description: add any other context about the problem here if applicable.
+      description: if you run your own instance, include the commit or worker version if you know it.
