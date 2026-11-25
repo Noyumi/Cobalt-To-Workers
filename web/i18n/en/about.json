@@ -32,5 +32,8 @@
     "support.description.issue": "if you want to report a bug or some other recurring issue, please do it on github.",
     "support.description.help": "use discord for any other questions. describe the issue properly in #cobalt-support or else no one will be able help you.",
     "support.description.best-effort": "all support is best effort and not guaranteed, a reply might take some time.",
-    "support.upstream": "These links go to the upstream Cobalt project."
+    "support.port_repo": "source code and forks on github",
+    "support.port_maintainer": "noyumi on github",
+    "support.port_discord": "discord id",
+    "support.upstream": "links to upstream cobalt"
 }

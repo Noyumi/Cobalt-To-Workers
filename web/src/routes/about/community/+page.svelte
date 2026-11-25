@@ -10,6 +10,23 @@
 </script>
 
 <div id="support-page">
+    <section class="port-support" aria-labelledby="port-support-heading">
+        <h2 id="port-support-heading">cobalt-to-workers</h2>
+        <ul>
+            <li>
+                <a href="https://github.com/Noyumi/Cobalt-To-Workers">{$t("about.support.port_repo")}</a>
+            </li>
+            <li>
+                <a href="https://github.com/Noyumi">{$t("about.support.port_maintainer")}</a>
+            </li>
+            <li>
+                <a href="https://discord.com/users/1021210809164111932">
+                    {$t("about.support.port_discord")} <code>1021210809164111932</code>
+                </a>
+            </li>
+        </ul>
+    </section>
+
     <p class="subtext support-note">{$t("about.support.upstream")}</p>
     <div
         id="support-buttons"
@@ -51,6 +68,22 @@
         display: flex;
         flex-direction: column;
         gap: 18px;
+    }
+
+    .port-support h2 {
+        margin: 0 0 8px;
+        font-size: 1.125rem;
+    }
+
+    .port-support ul {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding-inline-start: 1.25rem;
+    }
+
+    .port-support code {
+        user-select: text;
     }
 
     #support-buttons {

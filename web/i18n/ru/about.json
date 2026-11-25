@@ -27,5 +27,8 @@
     "heading.privacy_efficiency": "лучшая приватность и эффективность",
     "heading.partners": "партнёры",
     "support.bluesky": "следи за обновлениями и разработкой кобальта в своей ленте bluesky",
-    "support.upstream": "Эти ссылки ведут в исходный проект Cobalt."
+    "support.port_repo": "код и форки на github",
+    "support.port_maintainer": "noyumi на github",
+    "support.port_discord": "id в discord",
+    "support.upstream": "ссылки на исходный проект cobalt"
 }
