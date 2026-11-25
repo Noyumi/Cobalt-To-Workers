@@ -15,7 +15,15 @@ the tests run the api in miniflare and mock media providers and turnstile.
 
 ## local development
 
-put your api bindings in `api/.dev.vars`. git ignores this file. for a local run, set `API_URL=http://localhost:8787` and `WEB_ORIGIN=http://localhost:8788`.
+copy [the example bindings](../api/.dev.vars.example) to `api/.dev.vars` from the repo root. git ignores `api/.dev.vars`.
+
+```sh
+cp api/.dev.vars.example api/.dev.vars
+```
+
+in windows command prompt, use `copy api\.dev.vars.example api\.dev.vars`. in powershell, use `Copy-Item api/.dev.vars.example api/.dev.vars`.
+
+the sample uses `http://localhost:8787` for the api and `http://localhost:8788` for the site. use the same hostname in your browser and config.
 
 | binding | value |
 | --- | --- |
@@ -26,15 +34,15 @@ put your api bindings in `api/.dev.vars`. git ignores this file. for a local run
 | `JWT_SECRET` | a random secret of at least 32 characters |
 | `TUNNEL_SECRET` | a random 32-byte key encoded as base64url |
 | `DISABLED_SERVICES` | comma-separated adapter ids to disable. the wrangler default is `newgrounds`. use an empty value to test all implemented adapters locally. |
-| `SOURCE_URL` | url of the source for this version of the api. the api exposes it in `GET /`. |
+| `SOURCE_URL` | source url returned by `GET /`. you can leave it blank locally. |
 
-run this command once for `JWT_SECRET` and again for `TUNNEL_SECRET`.
+run this command twice and paste a different result into each of `JWT_SECRET` and `TUNNEL_SECRET` in `api/.dev.vars`.
 
 ```sh
 node -p "require('node:crypto').randomBytes(32).toString('base64url')"
 ```
 
-to test video downloads in a browser, use a turnstile widget that allows your frontend hostname. the api checks the verified hostname against `WEB_ORIGIN`. cloudflare's public test keys return `example.com`.
+the sample's public turnstile test keys let you try audio-only and photo-only downloads locally. to verify a video download, use a real widget that allows your frontend hostname. the api checks the hostname against `WEB_ORIGIN`, and the test keys always return `example.com`.
 
 set `WEB_DEFAULT_API=http://localhost:8787` in your shell or in `web/.env.local` before you build the frontend.
 
@@ -45,12 +53,21 @@ pnpm workers:api:dev
 ```
 
 in a second terminal, run `pnpm workers:web:dev --port 8788` and open `http://localhost:8788`.
+open `http://localhost:8787/` to see the api's service list and check that it picked up `API_URL`.
 
 ## deploy your instance
 
 1. run `pnpm exec wrangler login` and pick an https origin for each worker. the default worker names are `cobalt-to-workers-api` and `cobalt-to-workers`. if you use [custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/), set a custom domain route in each wrangler config.
-2. create a turnstile widget for the frontend hostname. run `pnpm workers:api:deploy`, then set the api bindings from the table above in the cloudflare dashboard. add `TURNSTILE_SECRET`, `JWT_SECRET`, and `TUNNEL_SECRET` as encrypted secrets. for a staging instance, use its own secrets and rate-limit namespace ids.
+2. create a real turnstile widget for the frontend hostname. run `pnpm workers:api:deploy`, then set the api bindings from the table above in the worker's settings under variables and secrets. use the deployed https origins and the widget's sitekey. add `TURNSTILE_SECRET`, `JWT_SECRET`, and `TUNNEL_SECRET` as encrypted secrets. for a staging instance, use its own secrets and rate-limit namespace ids.
 3. set `WEB_DEFAULT_API` to the api origin and `WEB_HOST` to the frontend hostname. use the same source url for `WEB_SOURCE_URL` on the frontend and `SOURCE_URL` on the api. run `pnpm --filter @imput/cobalt-web build`, then `pnpm workers:web:deploy`.
+
+you can also add the api secrets from your terminal. wrangler prompts for each value.
+
+```sh
+pnpm exec wrangler secret put TURNSTILE_SECRET --config api/wrangler.jsonc
+pnpm exec wrangler secret put JWT_SECRET --config api/wrangler.jsonc
+pnpm exec wrangler secret put TUNNEL_SECRET --config api/wrangler.jsonc
+```
 
 ## check a deployment
 

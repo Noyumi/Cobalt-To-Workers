@@ -1,55 +1,39 @@
-# contributing to cobalt
-if you're reading this, you are probably interested in contributing to cobalt, which we are very thankful for :3
+# contributing to cobalt-to-workers
 
-this document serves as a guide to help you make contributions that we can merge into the cobalt codebase.
+thanks for helping with the port. start with the [workers setup guide](docs/run-on-workers.md) to run the site and api on your machine.
 
-## translations
-we are currently accepting translations via the [i18n platform](https://i18n.imput.net).
+## where things live
 
-thank you for showing interest in making cobalt more accessible around the world, we really appreciate it! here are some guidelines for how a cobalt translation should look:
+- [api/worker](api/worker/) resolves links, verifies turnstile, and streams files on cloudflare workers.
+- [api/src/processing](api/src/processing/) has the link patterns and response formats shared with the upstream api.
+- [web](web/) has the sveltekit site. the [browser queue](web/src/lib/task-manager/) handles merging and conversion.
 
-- cobalt's writing style is informal. please do not use formal language, unless there is no other way to express the same idea of the original text in your language.
-- all cobalt text is written in lowercase. this is a stylistic choice, please do not capitalize translated sentences.
-- do not translate the name "cobalt", or "imput"
-- you can translate "meowbalt" into whatever your language's equivalent of _meow_ is (e.g. _miaubalt_ in German)
-- **please don't translate cobalt into languages which you are not experienced in.** we can use google translate ourselves, but we would prefer cobalt to be translated by humans, not computers.
+keep changes scoped to the code that needs them. if you change shared processing code, check how both apis use it. keep both workers on cloudflare's free plan and use the browser for media conversion.
 
-if your language does not exist on the translation platform yet, you can request to add it by adding it to any of cobalt's components (e.g. [here](https://i18n.imput.net/projects/cobalt/about/)).
+## adding a service
 
-before translating a piece of text, check that no one has made a translation yet. pending translations are displayed in the **Suggestions** tab on the translate page. if someone already made a suggestion, and you think it's correct, you can upvote it! this helps us distinguish that a translation is correct.
+support freely accessible public media. skip private, paywalled, and drm-protected content. only collect the information needed to resolve a download or fill in its metadata. if you're unsure whether a feature fits, open an issue before building it.
 
-if no one has submitted a translation, or the submitted translation seems wrong to you, you can submit your translation by clicking the **Suggest** button for each individual string, which sends it off for human review. we will then check it to to ensure no malicious translations are submitted, and add it to cobalt.
+1. put worker-specific adapter code in [api/worker](api/worker/) and register it in [media.js](api/worker/media.js). reuse the [shared link patterns](api/src/processing/service-config.js) where they fit.
+2. list the provider's metadata hosts in the adapter registration and its download hosts in [tunnel.js](api/worker/tunnel.js). keep the lists specific to the hosts the provider needs.
+3. update the [service coverage table](docs/run-on-workers.md#what-you-can-download). include the link types and formats you verified.
 
-if any translation string's meaning seems unclear to you, please leave a comment on the *Comments* tab, and we will either add an explanation or a screenshot.
+## checking your changes
 
-## adding features or support for services
-before putting in the effort to implement a feature, it's worth considering whether it would be appropriate to add it to cobalt. the cobalt api is built to assist people **only with downloading freely accessible content**. other functionality, such as:
-- downloading paid / not publicly accessible content
-- downloading content protected by DRM
-- scraping unrelated information & exposing it outside of file metadata
+- run `pnpm test:workers` for api and adapter changes. the [worker tests](api/worker/test/worker.js) mock providers and turnstile.
+- run `pnpm --filter @imput/cobalt-web check` for frontend changes. try the affected flow in a browser.
+- for an adapter change, try a public link through a running worker and open the saved file. tell us what you tested and where you ran it.
 
-will not be reviewed or merged.
+keep `*.test` and `*.test.*` files temporary and out of commits. keep local bindings, secrets, and build output out of git.
 
-if you plan on adding a feature or support for a service, but are unsure whether it would be appropriate, it's best to open an issue and discuss it beforehand.
+## writing and translations
 
-## git
-when contributing code to cobalt, there are a few guidelines in place to ensure that the code history is readable and comprehensible.
+edit copy for this port in [web/i18n](web/i18n/), under the matching language. use casual, lowercase copy. keep names like cobalt-to-workers, cobalt, and imput as written. leave translation keys and placeholders intact, and only translate languages you know well.
 
-### clean commit messages
-internally, we use a format similar to [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) - the first part signifies which part of the code you are changing (the *scope*), and the second part explains the change. for inspiration on how to write appropriate commit titles, you can take a look at the [commit history](https://github.com/imputnet/cobalt/commits/).
+## commits and pull requests
 
-the scope is not strictly defined, you can write whatever you find most fitting for the particular change. suppose you are changing a small part of a more significant part of the codebase. in that case, you can specify both the larger and smaller scopes in the commit message for clarity (e.g., if you were changing something in internal streams, the commit could be something like `api/stream: fix object not being handled properly`).
+use a short lowercase subject. add a scope if it helps, like `workers: fix twitch clip links`. use the commit body to explain decisions that need more context. give each provider a separate commit so it can be reviewed and reverted independently.
 
-if you think a change deserves further explanation, we encourage you to write a short explanation in the commit message ([example](https://github.com/imputnet/cobalt/commit/31be60484de8eaf63bba8a4f508e16438aa7ba6e)), which will save both you and us time having to enquire about the change, and you explaining the reason behind it.
+rebase your branch onto this repo's `main` when it needs an update. fold fixes into the commit they belong to while you're still working on your branch. if you need to update an already-pushed branch you own after a rebase, use `git push --force-with-lease`.
 
-if your contribution has uninformative commit titles, you may be asked to interactively rebase your branch and amend each commit to include a meaningful title.
-
-### clean commit history
-if your branch is out of date and/or has some merge conflicts with the `current` branch, you should **rebase** it instead of merging. this prevents meaningless merge commits from being included in your branch, which would then end up in the cobalt git history.
-
-if you find a mistake or bug in your code before it's merged or reviewed, instead of making a brand new commit to fix it, it would be preferable to amend that specific commit where the mistake was first introduced. this also helps us easily revert a commit if we discover that it introduced a bug or some unwanted behavior.
-- if the commit you are fixing is the latest one, you can add your files to staging and then use `git commit --amend` to apply the change.
-- if the commit is somewhere deeper in your branch, you can use `git commit --fixup=HASH`, where *`HASH`* is the commit you are fixing.
-    - afterward, you must interactively rebase your branch with `git rebase -i current --autosquash`.
-      this will open up an editor, but you don't need to do anything else except save the file and exit.
-- once you do either of these things, you will need to do a **force push** to your branch with `git push --force-with-lease`.
+in the pull request, tell us what changed and how you checked it. for download changes, include a public example link and the mode you tried.

@@ -1,0 +1,15 @@
+# copy to .dev.vars for local development
+API_URL=http://localhost:8787
+WEB_ORIGIN=http://localhost:8788
+
+# cloudflare's public test keys. use a real widget for video verification.
+TURNSTILE_SITEKEY=1x00000000000000000000AA
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+
+# run this twice and paste one result into each binding:
+# node -p "require('node:crypto').randomBytes(32).toString('base64url')"
+JWT_SECRET=
+TUNNEL_SECRET=
+
+DISABLED_SERVICES=newgrounds
+SOURCE_URL=

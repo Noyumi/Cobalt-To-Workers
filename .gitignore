@@ -18,6 +18,7 @@ build
 !.env.example
 .dev.vars
 .dev.vars.*
+!/api/.dev.vars.example
 .wrangler/
 cookies.json
 keys.json
