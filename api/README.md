@@ -2,7 +2,7 @@
 
 the [workers api](worker/) resolves links, checks turnstile, and streams files. the frontend handles media conversion in the browser. see [how to run it on cloudflare workers](../docs/run-on-workers.md) and [how to call the api](../docs/api.md#using-the-api-on-workers).
 
-the rest of this readme covers the upstream [express.js](https://www.npmjs.com/package/express) api. the [workers guide](../docs/run-on-workers.md#what-you-can-download) has the service list for this port.
+the standalone setup below covers the upstream [express.js](https://www.npmjs.com/package/express) api. the service table covers the workers port.
 
 ## running your own instance
 if you want to run your own instance for whatever purpose, [follow this guide](/docs/run-an-instance.md).
@@ -15,53 +15,47 @@ we recommend [deploying your own instance](/docs/run-an-instance.md) if you wish
 you can read [the api documentation here](/docs/api.md).
 
 ## supported services
-this list is not final and keeps expanding over time!
-if the desired service isn't supported yet, feel free to create an appropriate issue (or a pull request 👀).
 
-| service           | video + audio | only audio | only video | metadata | rich file names |
-| :--------         | :-----------: | :--------: | :--------: | :------: | :-------------: |
-| bilibili          | ✅            | ✅         | ✅         | ➖         | ➖              |
-| bluesky           | ✅            | ✅         | ✅         | ➖         | ➖              |
-| dailymotion       | ✅            | ✅         | ✅         | ✅         | ✅              |
-| instagram         | ✅            | ✅         | ✅         | ➖         | ➖              |
-| facebook          | ✅            | ❌         | ✅         | ➖         | ➖              |
-| loom              | ✅            | ❌         | ✅         | ✅         | ➖              |
-| newgrounds        | ✅            | ✅         | ✅         | ✅         | ✅              |
-| ok.ru             | ✅            | ❌         | ✅         | ✅         | ✅              |
-| pinterest         | ✅            | ✅         | ✅         | ➖         | ➖              |
-| reddit            | ✅            | ✅         | ✅         | ❌         | ❌              |
-| rutube            | ✅            | ✅         | ✅         | ✅         | ✅              |
-| snapchat          | ✅            | ✅         | ✅         | ➖         | ➖              |
-| soundcloud        | ➖            | ✅         | ➖         | ✅         | ✅              |
-| streamable        | ✅            | ✅         | ✅         | ➖         | ➖              |
-| tiktok            | ✅            | ✅         | ✅         | ❌         | ❌              |
-| tumblr            | ✅            | ✅         | ✅         | ➖         | ➖              |
-| twitch clips      | ✅            | ✅         | ✅         | ✅         | ✅              |
-| twitter/x         | ✅            | ✅         | ✅         | ➖         | ➖              |
-| vimeo             | ✅            | ✅         | ✅         | ✅         | ✅              |
-| vk videos & clips | ✅            | ❌         | ✅         | ✅         | ✅              |
-| youtube           | ✅            | ✅         | ✅         | ✅         | ✅              |
+these services are enabled by default in this checkout. check `GET /` for the services enabled on a running worker. formats depend on what the provider returns for each public link.
 
-| emoji   | meaning                 |
-| :-----: | :---------------------- |
-| ✅      | supported               |
-| ➖      | unreasonable/impossible |
-| ❌      | not supported           |
+| service | video + audio | only audio | only video | photos / gifs | metadata | rich file names |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
+| bluesky | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| instagram | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| loom | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| pinterest | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| reddit | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| snapchat | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| soundcloud | ➖ | ✅ | ➖ | ➖ | ✅ | ✅ |
+| spotify | ➖ | ✅ | ➖ | ➖ | ✅ | ✅ |
+| streamable | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| tiktok | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| tumblr | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| twitch clips | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| twitter/x | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| youtube | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
 
-### additional notes or features (per service)
-| service    | notes or features                                                                                                    |
-| :--------  | :-----                                                                                                               |
-| instagram  | supports reels, photos, and videos. lets you pick what to save from multi-media posts.                               |
-| facebook   | supports public accessible videos content only.                                                                      |
-| pinterest  | supports photos, gifs, videos and stories.                                                                           |
-| reddit     | supports gifs and videos.                                                                                            |
-| snapchat   | supports spotlights and stories. lets you pick what to save from stories.                                            |
-| rutube     | supports yappy & private links.                                                                                      |
-| soundcloud | supports private links.                                                                                              |
-| tiktok     | supports videos with or without watermark, images from slideshow without watermark, and full (original) audios.      |
-| twitter/x  | lets you pick what to save from multi-media posts. may not be 100% reliable due to current management.               |
-| vimeo      | audio downloads are only available for dash.                                                                         |
-| youtube    | supports videos, music, and shorts. 8K, 4K, HDR, VR, and high FPS videos. rich metadata & dubs. h264/av1/vp9 codecs. |
+| symbol | meaning |
+| :---: | --- |
+| ✅ | supported when the media is available |
+| ➖ | doesn't apply to this adapter |
+| ❌ | unavailable on workers |
+
+metadata means tags such as title or artist that the browser can add during processing. rich file names can use titles or authors when the adapter has them.
+
+### notes by service
+
+- **bluesky** saves photos, image galleries, and supported tenor gifs. video still needs hls support.
+- **instagram and twitter/x** can open a picker for posts with multiple items. audio extraction and muting apply to single videos.
+- **pinterest** supports image, gif, and direct mp4 pins, including short links.
+- **reddit** supports reddit-hosted mp4 tracks and `v.redd.it` links. audio export needs a separate audio track.
+- **snapchat** supports public spotlight videos and short links that lead to spotlight.
+- **spotify** matches single tracks to soundcloud, then youtube music, then youtube.
+- **tiktok** supports photo posts. video and audio depend on the media urls tiktok returns.
+- **tumblr** adds tags and rich file names for native audio. best mode can save the original mp3.
+- **youtube** uses direct tracks or a combined mp4 when available.
+
+newgrounds has a worker adapter and ships disabled after staging requests failed. see the [workers guide](../docs/run-on-workers.md#what-you-can-download) for more details.
 
 ## license
 cobalt api code is licensed under [AGPL-3.0](LICENSE).
