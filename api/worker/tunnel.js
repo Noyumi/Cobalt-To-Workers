@@ -22,6 +22,7 @@ const mediaHosts = new Map([
     ["soundcloud", ["*.sndcdn.com", "playback.media-streaming.soundcloud.cloud"]],
     ["youtube", ["*.googlevideo.com", "i.ytimg.com"]],
     ["tiktok", ["*.tiktokcdn.com", "*.tiktokcdn-us.com", "*.tiktokcdn-eu.com", "*.tiktokv.com", "*.muscdn.com"]],
+    ["twitch", ["clips-media-assets.twitch.tv", "clips-media-assets2.twitch.tv", "*.clips.twitchcdn.net", "d1ndex63qxojbr.cloudfront.net"]],
     ["twitter", ["pbs.twimg.com", "video.twimg.com"]],
 ]);
 

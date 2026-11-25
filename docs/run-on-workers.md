@@ -61,6 +61,7 @@ the session, download api, and tunnel each have a separate per-location rate lim
 | spotify (`spotify`) | public single-track links. reads spotify's public embed metadata and tries soundcloud, youtube music, then youtube. uses the audio pipeline for the source that matches. |
 | youtube (`youtube`) | direct audio and video tracks on public videos. when separate tracks are unavailable, the worker can use a combined mp4 for video or for browser-side audio extraction. coverage depends on the formats youtube returns to the worker. |
 | tiktok (`tiktok`) | photo posts and short links. video and audio require a media url in tiktok's public response. |
+| twitch clips (`twitch`) | public clip links, mp4 quality selection, and browser audio export. |
 | twitter / x (`twitter`) | photos, direct mp4s, and animated clips from public post embeds. mixed posts open a picker. |
 
 live workers checks verified streamable byte ranges, bluesky gallery images, soundcloud audio streams, youtube audio and separate video tracks, and a ten-photo tiktok post. a second youtube sample returned no usable format, and tiktok omitted the video address for its test post. newgrounds passed the mocked tests but failed the live video and audio requests. keep it disabled until both live paths pass. bluesky hls video and the other cobalt services are later milestones.

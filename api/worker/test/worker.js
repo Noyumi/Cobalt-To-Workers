@@ -29,6 +29,10 @@ const youtubeCombinedOnlyId = "t1alternate";
 let fallbackAndroidRequests = 0;
 const tiktokVideo = "7195741644585454894";
 const tiktokGallery = "7231234675476532526";
+const expectedServices = [
+    "bluesky", "instagram", "loom", "newgrounds", "pinterest", "reddit", "soundcloud", "spotify",
+    "streamable", "tiktok", "twitch clips", "twitter", "youtube",
+];
 const settings = {
     API_URL: api,
     DISABLED_SERVICES: "",
@@ -392,7 +396,7 @@ test("advertises browser conversion, configured services, and frontend CORS", as
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("access-control-allow-origin"), frontend);
     const { cobalt } = await response.json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "bluesky", "instagram", "loom", "pinterest", "reddit", "soundcloud", "spotify", "youtube", "tiktok", "twitter"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(expectedServices));
     assert.equal(cobalt.localProcessingRequired, true);
     assert.equal(cobalt.turnstileSitekey, settings.TURNSTILE_SITEKEY);
 
@@ -648,7 +652,7 @@ test("redeems a tunnel in another Worker isolate", async () => {
     assert.equal(await response.text(), "media");
 
     const { cobalt } = await (await second.fetch(api)).json();
-    assert.deepEqual(new Set(cobalt.services), new Set(["streamable", "newgrounds", "instagram", "loom", "pinterest", "reddit", "soundcloud", "spotify", "youtube", "tiktok", "twitter"]));
+    assert.deepEqual(new Set(cobalt.services), new Set(expectedServices.filter(service => service !== "bluesky")));
 });
 
 test("rejects an expired tunnel with a valid signature", async ({ mock }) => {

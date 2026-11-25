@@ -11,6 +11,7 @@ import instagram from "./instagram.js";
 import pinterest from "./pinterest.js";
 import reddit from "./reddit.js";
 import spotify from "./spotify.js";
+import twitch from "./twitch.js";
 import twitter from "./twitter.js";
 import { createTunnel, fetchFollowingRedirects, isMediaURLAllowed } from "./tunnel.js";
 
@@ -53,6 +54,7 @@ const adapters = {
         metadataHosts: youtubeHosts,
     },
     tiktok: { resolve: tiktok, metadataHosts: ["www.tiktok.com", "tiktok.com", "vt.tiktok.com"] },
+    twitch: { resolve: twitch, metadataHosts: ["gql.twitch.tv"], alwaysProxy: true },
     twitter: {
         resolve: twitter,
         metadataHosts: ["cdn.syndication.twimg.com"],
