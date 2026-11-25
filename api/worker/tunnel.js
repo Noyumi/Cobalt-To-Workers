@@ -19,6 +19,7 @@ const mediaHosts = new Map([
     ["loom", ["cdn.loom.com"]],
     ["pinterest", ["i.pinimg.com", "v1.pinimg.com"]],
     ["reddit", ["v.redd.it"]],
+    ["snapchat", ["*.sc-cdn.net"]],
     ["soundcloud", ["*.sndcdn.com", "playback.media-streaming.soundcloud.cloud"]],
     ["youtube", ["*.googlevideo.com", "i.ytimg.com"]],
     ["tiktok", ["*.tiktokcdn.com", "*.tiktokcdn-us.com", "*.tiktokcdn-eu.com", "*.tiktokv.com", "*.muscdn.com"]],

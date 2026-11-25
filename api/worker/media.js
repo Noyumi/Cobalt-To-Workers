@@ -10,6 +10,7 @@ import tiktok from "../src/processing/services/tiktok.js";
 import instagram from "./instagram.js";
 import pinterest from "./pinterest.js";
 import reddit from "./reddit.js";
+import snapchat from "./snapchat.js";
 import spotify from "./spotify.js";
 import twitch from "./twitch.js";
 import twitter from "./twitter.js";
@@ -39,6 +40,11 @@ const adapters = {
     reddit: {
         resolve: reddit,
         metadataHosts: ["www.redditmedia.com", "www.reddit.com", "reddit.com", "v.redd.it"],
+        alwaysProxy: true,
+    },
+    snapchat: {
+        resolve: snapchat,
+        metadataHosts: ["www.snapchat.com", "snapchat.com", "t.snapchat.com"],
         alwaysProxy: true,
     },
     soundcloud: {
