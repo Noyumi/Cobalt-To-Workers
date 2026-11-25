@@ -1,6 +1,5 @@
 <script lang="ts">
     import { t } from "$lib/i18n/translations";
-    import { openURL } from "$lib/download";
 
     import IconExternalLink from "@tabler/icons-svelte/IconExternalLink.svelte";
 
@@ -35,14 +34,14 @@
 
     export let platform: keyof typeof platformIcons;
     export let externalLink: string;
+    export let title: string | undefined = undefined;
 </script>
 
-<button
+<a
     class="button support-card"
-    role="link"
-    on:click={() => {
-        openURL(externalLink);
-    }}
+    href={externalLink}
+    target="_blank"
+    rel="noreferrer"
 >
     <div class="support-card-header">
         <div
@@ -55,21 +54,23 @@
             <svelte:component this={platformIcons[platform].icon} />
         </div>
         <div class="support-card-title">
-            {platform}
+            {title ?? platform}
             <IconExternalLink />
         </div>
     </div>
     <div class="subtext support-card-description">
-        {$t(`about.support.${platform}`)}
+        <slot>{$t(`about.support.${platform}`)}</slot>
     </div>
-</button>
+</a>
 
 <style>
     .support-card {
         padding: var(--padding);
         gap: 4px;
 
+        color: var(--button-text);
         text-align: start;
+        text-decoration: none;
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-start;
@@ -116,5 +117,10 @@
 
     .support-card-description {
         padding: 0;
+    }
+
+    .support-card-description :global(code) {
+        user-select: text;
+        overflow-wrap: anywhere;
     }
 </style>
