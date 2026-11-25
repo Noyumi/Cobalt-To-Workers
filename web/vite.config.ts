@@ -4,7 +4,7 @@ import basicSSL from "@vitejs/plugin-basic-ssl";
 import { glob } from "glob";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { createSitemap } from "svelte-sitemap/src/index";
-import { defineConfig, searchForWorkspaceRoot, type PluginOption } from "vite";
+import { defineConfig, loadEnv, searchForWorkspaceRoot, type PluginOption } from "vite";
 
 import { join, basename } from "node:path";
 import { createReadStream } from "node:fs";
@@ -77,20 +77,30 @@ const generateSitemap: PluginOption = {
     }
 }
 
-const checkDefaultApiEnv = (): PluginOption => ({
-    name: "check-default-api",
-    config() {
-        if (!process.env.WEB_DEFAULT_API) {
-            throw new Error(
-                "WEB_DEFAULT_API env variable is required, but missing."
-            );
+const publicFrontendSettings = new Set([
+    "WEB_DEFAULT_API",
+    "WEB_HOST",
+    "WEB_SOURCE_URL",
+    "WEB_PLAUSIBLE_HOST",
+    "WEB_ENABLE_WEBCODECS",
+    "WEB_ENABLE_DEPRECATED_YOUTUBE_HLS",
+]);
+
+const checkPublicEnv: PluginOption = {
+    name: "check-public-env",
+    config(_, { mode }) {
+        const env = loadEnv(mode, process.cwd(), "WEB_");
+        const unknown = Object.keys(env).filter(key => !publicFrontendSettings.has(key));
+        if (unknown.length) {
+            throw new Error("unrecognized public frontend settings: " + unknown.join(", "));
         }
+        if (!env.WEB_DEFAULT_API) throw new Error("WEB_DEFAULT_API env variable is required, but missing.");
     },
-});
+};
 
 export default defineConfig({
     plugins: [
-        checkDefaultApiEnv(),
+        checkPublicEnv,
         basicSSL(),
         sveltekit(),
         enableCOEP,
@@ -98,7 +108,7 @@ export default defineConfig({
         generateSitemap
     ],
     build: {
-        sourcemap: true,
+        sourcemap: false,
         rollupOptions: {
             output: {
                 manualChunks: (id) => {

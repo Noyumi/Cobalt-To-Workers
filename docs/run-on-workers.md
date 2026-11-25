@@ -69,6 +69,10 @@ pnpm exec wrangler secret put JWT_SECRET --config api/wrangler.jsonc
 pnpm exec wrangler secret put TUNNEL_SECRET --config api/wrangler.jsonc
 ```
 
+the frontend worker publishes the build in `web/build`. the [asset allowlist](../web/static/.assetsignore) limits uploads to public pages and assets. check the allowlist when adding a page or asset. keep local bindings and private files outside `web/static`.
+
+the documented `WEB_` settings are public. put api secrets in `api/.dev.vars` locally and in encrypted worker secrets on cloudflare.
+
 ## check a deployment
 
 - save a video after solving turnstile. try a photo picker and play an audio file from the browser queue.
