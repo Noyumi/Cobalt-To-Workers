@@ -118,6 +118,19 @@ async function openTunnel(encoded, secret) {
     }
 }
 
+function fetchTunnelMedia(media, headers, signal) {
+    const isAllowed = url => isMediaURLAllowed(media.service, url);
+    if (!media.hlsAudio) {
+        return fetchFollowingRedirects(media.url, { headers, signal, cache: "no-store" }, isAllowed);
+    }
+
+    const fetchPart = (url, partSignal) => fetch(url, {
+        redirect: "manual",
+        signal: partSignal ? AbortSignal.any([partSignal, signal]) : signal,
+    });
+    return openHlsAudio(media.url, fetchPart, isAllowed);
+}
+
 export async function handleTunnel(request, env) {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
@@ -132,25 +145,16 @@ export async function handleTunnel(request, env) {
     try {
         const upstreamHeaders = new Headers({ "Accept-Encoding": "identity" });
         if (media.service === "tiktok") upstreamHeaders.set("Referer", "https://www.tiktok.com/");
-        const range = request.headers.get("Range");
+        const requestedRange = request.headers.get("Range");
         const target = new URL(media.url);
         const size = Number(target.searchParams.get("clen"));
-        const fetchWholeRange = !range && media.service === "youtube" && target.hostname.endsWith(".googlevideo.com")
+        // Google Video can return a partial file without an explicit byte range.
+        const fetchWholeRange = !requestedRange && media.service === "youtube" && target.hostname.endsWith(".googlevideo.com")
             && Number.isSafeInteger(size) && size > 0;
+        const range = fetchWholeRange ? `bytes=0-${size - 1}` : requestedRange;
         if (range) upstreamHeaders.set("Range", range);
-        if (fetchWholeRange) upstreamHeaders.set("Range", `bytes=0-${size - 1}`);
 
-        const isAllowed = (url) => isMediaURLAllowed(media.service, url);
-        const upstream = media.hlsAudio
-            ? await openHlsAudio(media.url, (url, signal) => fetch(url, {
-                redirect: "manual",
-                signal: signal ? AbortSignal.any([signal, request.signal]) : request.signal,
-            }), isAllowed)
-            : await fetchFollowingRedirects(
-                media.url,
-                { headers: upstreamHeaders, signal: request.signal, cache: "no-store" },
-                isAllowed,
-            );
+        const upstream = await fetchTunnelMedia(media, upstreamHeaders, request.signal);
 
         const headers = new Headers({
             "Cache-Control": "private, no-store",

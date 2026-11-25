@@ -1,5 +1,4 @@
 <script lang="ts">
-
     import { tick } from "svelte";
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
@@ -34,8 +33,11 @@
 
     const validLink = (url: string) => {
         try {
-            return /^https?\:/i.test(new URL(url).protocol);
-        } catch {}
+            const { protocol } = new URL(url);
+            return protocol === "https:" || protocol === "http:";
+        } catch {
+            return false;
+        }
     };
 
     let isFocused = $state(false);

@@ -9,6 +9,14 @@ import { handleTunnel } from "./tunnel.js";
 const jsonType = /^application\/json(?:;\s*charset=utf-8)?$/i;
 const maxRequestBytes = 1024;
 const startedAt = String(Date.now());
+const requiredBindings = [
+    "API_URL", "WEB_ORIGIN", "TURNSTILE_SITEKEY", "TURNSTILE_SECRET", "JWT_SECRET", "TUNNEL_SECRET",
+];
+const protectedRoutes = new Map([
+    ["POST /", { handle: handleDownload, limiter: "API_LIMITER" }],
+    ["POST /session", { handle: handleSession, limiter: "SESSION_LIMITER" }],
+    ["GET /tunnel", { handle: handleTunnel, limiter: "TUNNEL_LIMITER" }],
+]);
 
 function error(code, status = 400, context) {
     return Response.json({
@@ -17,7 +25,7 @@ function error(code, status = 400, context) {
     }, { status });
 }
 
-async function readRequest(request) {
+async function readJsonBody(request) {
     if (!request.body || Number(request.headers.get("Content-Length")) > maxRequestBytes) {
         return;
     }
@@ -60,64 +68,34 @@ function rateExceeded() {
     return response;
 }
 
-async function handleRequest(request, env) {
-    const url = new URL(request.url);
-    const { pathname } = url;
-    const { method } = request;
+function serverInfo(env) {
+    const source = URL.parse(env.SOURCE_URL);
+    const remote = source?.hostname === "github.com"
+        ? source.pathname.replace(/^\//, "").replace(/\.git$/, "")
+        : undefined;
+    return Response.json({
+        cobalt: {
+            version: apiPackage.version,
+            url: env.API_URL,
+            startTime: startedAt,
+            services: [...enabledServices(env.DISABLED_SERVICES)].map(friendlyServiceName),
+            turnstileSitekey: env.TURNSTILE_SITEKEY,
+            localProcessingRequired: true,
+            source: source?.href,
+        },
+        git: { remote, branch: env.GIT_BRANCH, commit: env.GIT_COMMIT },
+    });
+}
 
-    if (pathname === "/" && method === "GET") {
-        const source = URL.parse(env.SOURCE_URL);
-        const remote = source?.hostname === "github.com"
-            ? source.pathname.replace(/^\//, "").replace(/\.git$/, "")
-            : undefined;
-        return Response.json({
-            cobalt: {
-                version: apiPackage.version,
-                url: env.API_URL,
-                startTime: startedAt,
-                services: [...enabledServices(env.DISABLED_SERVICES)].map(friendlyServiceName),
-                turnstileSitekey: env.TURNSTILE_SITEKEY,
-                localProcessingRequired: true,
-                source: source?.href,
-            },
-            git: { remote, branch: env.GIT_BRANCH, commit: env.GIT_COMMIT },
-        });
-    }
+async function handleSession(request, env, ip) {
+    const challenge = request.headers.get("cf-turnstile-response");
+    if (!challenge) return error("auth.turnstile.missing");
 
-    const isDownload = pathname === "/" && method === "POST";
-    const isSession = pathname === "/session" && method === "POST";
-    const isTunnel = pathname === "/tunnel" && method === "GET";
-    if (!isDownload && !isSession && !isTunnel) {
-        return error("link.unsupported", 404);
-    }
+    const session = await createSession(challenge, ip, env);
+    return session ? Response.json(session) : error("auth.turnstile.invalid");
+}
 
-    if (!env.API_URL || !env.WEB_ORIGIN || !env.TURNSTILE_SITEKEY || !env.TURNSTILE_SECRET
-        || !env.JWT_SECRET || !env.TUNNEL_SECRET) {
-        return error("auth.not_configured", 503);
-    }
-
-    const ip = request.headers.get("CF-Connecting-IP");
-    if (!ip || !ipaddr.isValid(ip)) {
-        return error("generic");
-    }
-
-    const limiter = isTunnel ? env.TUNNEL_LIMITER : isSession ? env.SESSION_LIMITER : env.API_LIMITER;
-    if (!(await limiter.limit({ key: rateKey(ip) })).success) {
-        return rateExceeded();
-    }
-
-    if (isTunnel) {
-        return handleTunnel(request, env);
-    }
-
-    if (isSession) {
-        const challenge = request.headers.get("cf-turnstile-response");
-        if (!challenge) return error("auth.turnstile.missing");
-
-        const session = await createSession(challenge, ip, env);
-        return session ? Response.json(session) : error("auth.turnstile.invalid");
-    }
-
+async function handleDownload(request, env, ip) {
     if (!jsonType.test(request.headers.get("Accept"))) return error("header.accept");
     if (!jsonType.test(request.headers.get("Content-Type"))) return error("header.content_type");
 
@@ -125,7 +103,7 @@ async function handleRequest(request, env) {
     const verified = authorization ? await verifySession(authorization, ip, env) : false;
     if (authorization && !verified) return error("auth.jwt.invalid");
 
-    const body = await readRequest(request);
+    const body = await readJsonBody(request);
     if (!body) return error("invalid_body");
     if (!body.url) return error("link.missing");
 
@@ -141,6 +119,23 @@ async function handleRequest(request, env) {
     } catch {
         return error("fetch.critical", 400, { service: friendlyServiceName(parsed.host) });
     }
+}
+
+async function handleRequest(request, env) {
+    const { pathname } = new URL(request.url);
+    const route = request.method + " " + pathname;
+    if (route === "GET /") return serverInfo(env);
+
+    const endpoint = protectedRoutes.get(route);
+    if (!endpoint) return error("link.unsupported", 404);
+    if (requiredBindings.some(name => !env[name])) return error("auth.not_configured", 503);
+
+    const ip = request.headers.get("CF-Connecting-IP");
+    if (!ip || !ipaddr.isValid(ip)) return error("generic");
+
+    const limiter = env[endpoint.limiter];
+    if (!(await limiter.limit({ key: rateKey(ip) })).success) return rateExceeded();
+    return endpoint.handle(request, env, ip);
 }
 
 export default {

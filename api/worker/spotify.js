@@ -4,9 +4,12 @@ import soundcloud, { searchSoundCloudTracks } from "../src/processing/services/s
 const soundCloudServices = new Set(["soundcloud"]);
 
 function normalizeName(name) {
-    return typeof name === "string"
-        ? name.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim()
-        : "";
+    if (typeof name !== "string") return "";
+    return name.normalize("NFKD")
+        .replace(/\p{M}/gu, "")
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
+        .trim();
 }
 
 function matchesDuration(value, duration) {
@@ -132,8 +135,13 @@ export default async function spotify(options) {
 
     const query = artist + " " + title;
     const isrc = normalizeName(track.isrc ?? track.externalIds?.isrc);
-    const audio = (audioServices.has("soundcloud") ? await resolveSoundCloud(query, options, title, artist, duration, isrc) : undefined)
-        ?? (audioServices.has("youtube") ? await resolveYouTube(query, options, title, artist, duration) : undefined);
+    let audio;
+    if (audioServices.has("soundcloud")) {
+        audio = await resolveSoundCloud(query, options, title, artist, duration, isrc);
+    }
+    if (!audio && audioServices.has("youtube")) {
+        audio = await resolveYouTube(query, options, title, artist, duration);
+    }
     if (!audio) return { error: "spotify.no_match" };
     return {
         ...audio,

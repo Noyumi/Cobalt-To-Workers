@@ -95,62 +95,53 @@ function mediaURL(service, value) {
     return url.href;
 }
 
-export async function resolveMedia({ host, patternMatch }, params, env, verified) {
-    const adapter = adapters[host];
-    let mediaService = host;
-    const signal = AbortSignal.timeout(12_000);
-    const metadataAllowed = target => target.protocol === "https:" && !target.port && !target.username && !target.password
-        && adapter.metadataHosts.includes(target.hostname);
+function providerFetcher(hosts, signal) {
+    const isAllowed = url => url.protocol === "https:" && !url.port && !url.username && !url.password
+        && hosts.includes(url.hostname);
 
-    const fetcher = (input, init) => {
+    return (input, init) => {
         const url = new URL(input instanceof Request ? input.url : input);
-        if (!metadataAllowed(url)) throw new Error("Metadata destination is not allowed");
+        if (!isAllowed(url)) throw new Error("Metadata destination is not allowed");
 
         const method = init?.method ?? (input instanceof Request ? input.method : "GET");
         if (method !== "GET" || init?.redirect === "manual") {
             return fetch(input, { ...init, signal, redirect: "manual" });
         }
-        return fetchFollowingRedirects(url, { ...init, signal }, metadataAllowed);
+        return fetchFollowingRedirects(url, { ...init, signal }, isAllowed);
     };
+}
 
-    async function resolveRedirectingURL(url) {
-        const response = await fetcher(url, { headers: { "User-Agent": userAgent } });
+async function probeMediaURL(url, contentLength, service, signal) {
+    const target = URL.parse(url);
+    const isAllowed = candidate => isMediaURLAllowed(service, candidate);
+    if (!target || !isAllowed(target)) return false;
+
+    // Probe the last byte when the length is known so truncated files fail the check.
+    const length = contentLength ?? Number(target.searchParams.get("clen"));
+    const hasLength = Number.isSafeInteger(length) && length > 0;
+    const lastByte = hasLength ? length - 1 : 0;
+    try {
+        const response = await fetchFollowingRedirects(target, {
+            headers: { Range: `bytes=${lastByte}-${lastByte}`, "Accept-Encoding": "identity" },
+            cache: "no-store",
+            signal,
+        }, isAllowed);
         await response.body?.cancel();
-        if (!response.url) return;
-        const parsed = extract(normalizeURL(response.url), new Set([host]));
-        if (parsed.host === host) return parsed.patternMatch;
-    }
-
-    async function probeMedia(url, contentLength, service = host) {
-        const target = URL.parse(url);
-        const allowed = target => isMediaURLAllowed(service, target);
-        if (!target || !allowed(target)) return false;
-        const length = contentLength ?? Number(target.searchParams.get("clen"));
-        const hasLength = Number.isSafeInteger(length) && length > 0;
-        const lastByte = hasLength ? length - 1 : 0;
-        try {
-            const response = await fetchFollowingRedirects(target, {
-                headers: { Range: `bytes=${lastByte}-${lastByte}`, "Accept-Encoding": "identity" },
-                cache: "no-store",
-                signal,
-            }, allowed);
-            await response.body?.cancel();
-            if (response.status === 206) {
-                const received = response.headers.get("Content-Range");
-                return hasLength
-                    ? received === `bytes ${lastByte}-${lastByte}/${length}`
-                    : received?.startsWith("bytes 0-0/") === true;
-            }
-            return response.status === 200
-                && (!hasLength || Number(response.headers.get("Content-Length")) === length);
-        } catch {
-            return false;
+        if (response.status === 206) {
+            const received = response.headers.get("Content-Range");
+            return hasLength
+                ? received === `bytes ${lastByte}-${lastByte}/${length}`
+                : received?.startsWith("bytes 0-0/") === true;
         }
+        return response.status === 200
+            && (!hasLength || Number(response.headers.get("Content-Length")) === length);
+    } catch {
+        return false;
     }
+}
 
-    let audioManifest;
-
-    const createStream = ({ filename, url, service = mediaService }) => {
+function mediaStream(env, defaultService, audioManifest) {
+    return ({ filename, url, service = defaultService }) => {
         const target = mediaURL(service, url);
         return createTunnel({
             filename,
@@ -159,19 +150,22 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
             hlsAudio: target === audioManifest || undefined,
         }, env, env.API_URL);
     };
+}
 
-    async function createResponse(type, data) {
+function mediaResponder(createStream, mediaService, tunnelPicker) {
+    return async (type, data) => {
         if (type === "redirect") {
             return formatResponse(type, { ...data, url: mediaURL(mediaService, data.url) });
         }
         if (type === "tunnel") {
             return formatResponse(type, data, { url: await createStream(data) });
         }
-        if (type === "picker" && adapter.tunnelPicker) {
+        if (type === "picker" && tunnelPicker) {
             const picker = await Promise.all(data.picker.map(async item => {
                 const url = await createStream(item);
-                const thumb = item.thumb === item.url ? url
-                    : item.thumb && await createStream({ url: item.thumb });
+                let thumb = item.thumb;
+                if (thumb === item.url) thumb = url;
+                else if (thumb) thumb = await createStream({ url: thumb });
                 return { type: item.type, url, thumb };
             }));
             return formatResponse(type, { ...data, picker });
@@ -184,6 +178,20 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
             return formatResponse(type, data, { tunnels });
         }
         return formatResponse(type, data);
+    };
+}
+
+export async function resolveMedia({ host, patternMatch }, params, env, verified) {
+    const adapter = adapters[host];
+    const signal = AbortSignal.timeout(12_000);
+    const fetcher = providerFetcher(adapter.metadataHosts, signal);
+
+    async function resolveRedirectingURL(url) {
+        const response = await fetcher(url, { headers: { "User-Agent": userAgent } });
+        await response.body?.cancel();
+        if (!response.url) return;
+        const parsed = extract(normalizeURL(response.url), new Set([host]));
+        if (parsed.host === host) return parsed.patternMatch;
     }
 
     const alwaysProxy = adapter.alwaysProxy || params.alwaysProxy || params.localProcessing === "forced";
@@ -196,9 +204,9 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         params,
         userAgent,
         fetcher,
-        probeMedia,
+        probeMedia: (url, length, service = host) => probeMediaURL(url, length, service, signal),
         alwaysProxy: alwaysProxy || host === "tiktok",
-        createStream,
+        createStream: mediaStream(env, host),
         allowVideo: false,
         durationLimit,
         format: params.audioFormat,
@@ -216,7 +224,7 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         return formatResponse("error", { code: `error.api.${result.error}`, context });
     }
 
-    mediaService = result.mediaService ?? host;
+    const mediaService = result.mediaService ?? host;
     const isAudioOnly = mediaService === "soundcloud" || result.isAudioOnly || params.downloadMode === "audio";
     const hasVideo = result.picker
         ? result.picker.some(item => item.type === "video")
@@ -225,16 +233,17 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
         return formatResponse("error", { code: "error.api.auth.jwt.missing" });
     }
 
-    if (mediaService === "soundcloud" && result.isHLS) {
-        audioManifest = mediaURL(mediaService, result.urls);
-        result.isHLS = false;
-    }
     if (host === "tiktok" && result.picker) {
         return formatResponse("picker", { picker: result.picker, audioAvailable: Boolean(result.urls) });
     }
 
+    const audioManifest = mediaService === "soundcloud" && result.isHLS
+        ? mediaURL(mediaService, result.urls)
+        : undefined;
+    const createStream = mediaStream(env, mediaService, audioManifest);
+    const createResponse = mediaResponder(createStream, mediaService, adapter.tunnelPicker);
     return await matchAction({
-        r: result,
+        r: audioManifest ? { ...result, isHLS: false } : result,
         host: mediaService,
         audioFormat: params.audioFormat,
         isAudioOnly,
