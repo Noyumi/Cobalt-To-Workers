@@ -7,6 +7,7 @@ import newgrounds from "../src/processing/services/newgrounds.js";
 import streamable from "../src/processing/services/streamable.js";
 import soundcloud from "../src/processing/services/soundcloud.js";
 import tiktok from "../src/processing/services/tiktok.js";
+import tumblr from "../src/processing/services/tumblr.js";
 import instagram from "./instagram.js";
 import pinterest from "./pinterest.js";
 import reddit from "./reddit.js";
@@ -60,6 +61,7 @@ const adapters = {
         metadataHosts: youtubeHosts,
     },
     tiktok: { resolve: tiktok, metadataHosts: ["www.tiktok.com", "tiktok.com", "vt.tiktok.com"] },
+    tumblr: { resolve: tumblr, metadataHosts: ["api-http2.tumblr.com"], alwaysProxy: true },
     twitch: { resolve: twitch, metadataHosts: ["gql.twitch.tv"], alwaysProxy: true },
     twitter: {
         resolve: twitter,
@@ -187,6 +189,7 @@ export async function resolveMedia({ host, patternMatch }, params, env, verified
     const alwaysProxy = adapter.alwaysProxy || params.alwaysProxy || params.localProcessing === "forced";
     const result = await adapter.resolve({
         ...patternMatch,
+        url: params.url,
         isAudioOnly: params.downloadMode === "audio",
         isAudioMuted: params.downloadMode === "mute",
         quality: params.videoQuality,

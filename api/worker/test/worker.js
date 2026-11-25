@@ -31,7 +31,7 @@ const tiktokVideo = "7195741644585454894";
 const tiktokGallery = "7231234675476532526";
 const expectedServices = [
     "bluesky", "instagram", "loom", "newgrounds", "pinterest", "reddit", "snapchat", "soundcloud", "spotify",
-    "streamable", "tiktok", "twitch clips", "twitter", "youtube",
+    "streamable", "tiktok", "tumblr", "twitch clips", "twitter", "youtube",
 ];
 const settings = {
     API_URL: api,

@@ -62,6 +62,7 @@ the session, download api, and tunnel each have a separate per-location rate lim
 | spotify (`spotify`) | public single-track links. reads spotify's public embed metadata and tries soundcloud, youtube music, then youtube. uses the audio pipeline for the source that matches. |
 | youtube (`youtube`) | direct audio and video tracks on public videos. when separate tracks are unavailable, the worker can use a combined mp4 for video or for browser-side audio extraction. coverage depends on the formats youtube returns to the worker. |
 | tiktok (`tiktok`) | photo posts and short links. video and audio require a media url in tiktok's public response. |
+| tumblr (`tumblr`) | native audio and video from public posts. saves original mp3 audio in best mode. |
 | twitch clips (`twitch`) | public clip links, mp4 quality selection, and browser audio export. |
 | twitter / x (`twitter`) | photos, direct mp4s, and animated clips from public post embeds. mixed posts open a picker. |
 
