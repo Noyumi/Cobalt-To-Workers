@@ -1,5 +1,8 @@
 # cobalt api
-this directory includes the source code for cobalt api. it's made with [express.js](https://www.npmjs.com/package/express) and love!
+
+the [workers api](worker/) resolves links, checks turnstile, and streams files. the frontend handles media conversion in the browser. see [how to run it on cloudflare workers](../docs/run-on-workers.md) and [how to call the api](../docs/api.md#using-the-api-on-workers).
+
+the rest of this readme covers the upstream [express.js](https://www.npmjs.com/package/express) api. the [workers guide](../docs/run-on-workers.md#what-you-can-download) has the service list for this port.
 
 ## running your own instance
 if you want to run your own instance for whatever purpose, [follow this guide](/docs/run-an-instance.md).

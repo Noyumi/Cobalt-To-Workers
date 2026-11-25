@@ -4,12 +4,25 @@ methods, acceptable values, headers, responses and everything else related to ma
 > [!IMPORTANT]
 > hosted api instances (such as `api.cobalt.tools`) use bot protection and are **not** intended to be used in other projects without explicit permission. if you want to use the cobalt api, you should [host your own instance](/docs/run-an-instance.md) or ask an instance owner for access.
 
+- [using the api on workers](#using-the-api-on-workers)
 - [POST /](#post)
 - [POST /session](#post-session)
 - [GET /](#get)
 - [GET /tunnel](#get-tunnel)
 
-all endpoints (except for `GET /`) are rate limited and return current rate limiting status in `RateLimit-*` headers, according to the ["RateLimit Header Fields for HTTP" spec](https://www.ietf.org/archive/id/draft-polli-ratelimit-headers-02.html#name-header-specifications).
+on the upstream api, endpoints other than `GET /` return `RateLimit-*` headers with their current [rate limit status](https://www.ietf.org/archive/id/draft-polli-ratelimit-headers-02.html#name-header-specifications).
+
+## using the api on workers
+
+the workers api uses the response formats below. check `GET /` for the enabled services, turnstile sitekey, and source url for the running instance.
+
+- when a video request returns `error.api.auth.jwt.missing`, use turnstile and [create a session](#post-session). retry the download request with the bearer token. audio-only and photo-only downloads skip this step.
+- when a request returns `local-processing`, fetch the input files and process them on the client. the web app uses libav in the browser.
+- if a tiktok photo post returns `audioAvailable`, request the same link with `downloadMode: "audio"` to save its audio.
+- the download api, sessions, and tunnels have separate rate limits. a limited request returns `429` and a `Retry-After` header.
+- browser requests must come from the origin configured in `WEB_ORIGIN`.
+
+see [how to run the workers api](run-on-workers.md).
 
 ## authentication
 an api instance may be configured to require you to authenticate yourself.

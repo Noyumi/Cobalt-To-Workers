@@ -1,37 +1,34 @@
 # cobalt-to-workers frontend
-the frontend is a static web app built with
-[sveltekit](https://kit.svelte.dev/) + [vite](https://vitejs.dev/).
 
-## configuring
-- to run the dev environment, run `pnpm run dev`.
-- to make the release build of the frontend, run `pnpm run build`.
+this [sveltekit](https://kit.svelte.dev/) app runs on cloudflare workers as static files. it sends requests to the api worker and uses libav to process files in the browser.
+
+## run the frontend
+
+follow the [workers guide](../docs/run-on-workers.md) to run the site and api together. for ui development from this directory, run `pnpm run dev`. run `pnpm run build` to build the static files in `web/build`.
 
 ## environment variables
-the frontend has several build-time environment variables for configuring various features. to use
-them, you must specify them when building the frontend (or running a vite server for development).
 
-`WEB_DEFAULT_API` is **required** to run cobalt frontend.
+set these before building the site or starting the vite dev server. the web app needs `WEB_DEFAULT_API` to resolve downloads.
 
-| name                            | example                     | description                                                                                             |
-|:--------------------------------|:----------------------------|:--------------------------------------------------------------------------------------------------------|
-| `WEB_HOST`                      | `cobalt.tools`              | domain on which the frontend will be running. used for meta tags and configuring plausible.             |
-| `WEB_PLAUSIBLE_HOST`            | `plausible.io`*             | enables plausible analytics with provided hostname as receiver backend.                                 |
-| `WEB_DEFAULT_API`               | `https://api.cobalt.tools/` | changes url which is used for api requests by frontend clients.                                         |
-| `WEB_SOURCE_URL`                 | `https://github.com/your-account/Cobalt-To-Workers` | links to the source of the deployed instance from the credits page. |
-| `ENABLE_DEPRECATED_YOUTUBE_HLS` | `true`                      | enables the youtube HLS settings entry; allows sending the related variable to the processing instance. |
+| name | example | description |
+| --- | --- | --- |
+| `WEB_DEFAULT_API` | `https://api.example.com` | origin of your api worker |
+| `WEB_HOST` | `media.example.com` | frontend hostname for metadata and optional analytics |
+| `WEB_SOURCE_URL` | `https://media.example.com/source.zip` | source for the deployed version, linked on the credits page |
+| `WEB_PLAUSIBLE_HOST` | `analytics.example.com` | optional plausible analytics hostname |
+| `WEB_ENABLE_DEPRECATED_YOUTUBE_HLS` | `true` | shows the legacy youtube hls setting for upstream apis |
 
-\* don't use plausible.io as receiver backend unless you paid for their cloud service.
-   use your own domain when hosting community edition of plausible. refer to their [docs](https://plausible.io/docs) when needed.
+use your own analytics hostname for plausible community edition. see the [plausible docs](https://plausible.io/docs) for setup.
 
 ## link prefill
-to prefill the link into the input box & start the download automatically, you can pass the URL in the `#` parameter, like this:
+put a url after `#` to fill the input and start the download.
 ```
-https://cobalt.tools/#https://www.youtube.com/watch?v=dQw4w9WgXcQ
+https://media.example.com/#https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
-the link can also be URI-encoded, like this:
+you can also use an encoded url.
 ```
-https://cobalt.tools/#https%3A//www.youtube.com/watch%3Fv=dQw4w9WgXcQ
+https://media.example.com/#https%3A//www.youtube.com/watch%3Fv=dQw4w9WgXcQ
 ```
 
 ## license

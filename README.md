@@ -1,42 +1,29 @@
 # cobalt-to-workers
 
-cobalt-to-workers is a noncommercial cobalt fork for cloudflare workers free. one worker serves the sveltekit site and a second resolves media links and streams downloads. the browser handles conversion with libav.
+cobalt-to-workers is an independent, noncommercial fork of cobalt for cloudflare workers free. paste a public link to save a video, a track, or a photo. [try it at obscure.lol](https://obscure.lol)
 
-see [setup, service coverage, and deployment](docs/run-on-workers.md). the material below describes the upstream cobalt project.
+one worker serves the site and another resolves links and streams files. your browser uses libav to merge tracks or convert files when a download needs it.
 
-## upstream cobalt
+## run your own instance
 
-cobalt is a media downloader that doesn't piss you off. it's friendly, efficient, and doesn't have ads, trackers, paywalls or other nonsense.
+- [set up and deploy on cloudflare workers](docs/run-on-workers.md)
+- [see what you can download](docs/run-on-workers.md#what-you-can-download)
+- [use the api](docs/api.md#using-the-api-on-workers)
 
-paste the link, get the file, move on. that simple, just how it should be.
+## what's in this repo
 
-### cobalt monorepo
-this monorepo includes source code for api, frontend, and related packages:
-- [api tree & readme](/api/)
-- [web tree & readme](/web/)
-- [packages tree](/packages/)
+- [api](api/README.md) for link resolution, turnstile, and file streaming
+- [web](web/README.md) for the sveltekit site and browser media processing
+- [packages](packages/) for shared code, including the api client
 
-it also includes documentation in the [docs tree](/docs/):
-- [how to run a cobalt instance](/docs/run-an-instance.md)
-- [how to protect a cobalt instance](/docs/protect-an-instance.md)
-- [cobalt api instance environment variables](/docs/api-env-variables.md)
-- [cobalt api documentation](/docs/api.md)
+if you'd like to contribute, start with the workers guide for local setup and tests. see the [contribution guidelines](CONTRIBUTING.md) for upstream conventions.
 
-### ethics
-cobalt is a tool that makes downloading public content easier. it takes **zero liability**.
-the end user is responsible for what they download, how they use and distribute that content.
-cobalt never caches any content, it [works like a fancy proxy](/api/src/stream/).
+## thanks
 
-cobalt is in no way a piracy tool and cannot be used as such.
-it can only download free & publicly accessible content.
-same content can be downloaded via dev tools of any modern web browser.
+thanks to [imput and the cobalt contributors](https://github.com/imputnet/cobalt) for making cobalt and sharing the code this port builds on.
 
-### contributing
-if you're considering contributing to cobalt, first of all, thank you! check the [contribution guidelines here](/CONTRIBUTING.md) before getting started, they'll help you do your best right away.
+a lot of this port was built with help from [codex](https://openai.com/codex/), openai's ai coding agent. codex helped adapt the api for workers, add download support, and test downloads and deployments.
 
-### thank you
-cobalt is sponsored by [royalehosting.net](https://royalehosting.net/?partner=cobalt). a part of our infrastructure is hosted on their network. we really appreciate their kindness and support!
+## licenses
 
-### licenses
-for relevant licensing information, see the [api](api/README.md) and [web](web/README.md) READMEs.
-unless specified otherwise, the remainder of this repository is licensed under [AGPL-3.0](LICENSE).
+the api uses [agpl-3.0](api/LICENSE) and the frontend uses [cc by-nc-sa 4.0](web/LICENSE). the rest of the repo uses [agpl-3.0](LICENSE) unless specified otherwise. see the [frontend readme](web/README.md#license) for cobalt's branding and attribution terms.

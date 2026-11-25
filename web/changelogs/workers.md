@@ -3,11 +3,13 @@ title: "cobalt on cloudflare workers"
 date: "24 November, 2026"
 ---
 
-Cobalt-To-Workers is an unaffiliated, third-party port of [cobalt by imput](https://github.com/imputnet/cobalt). the older posts here are cobalt's upstream release notes.
+cobalt-to-workers is an independent port of [cobalt by imput](https://github.com/imputnet/cobalt). the older posts here are from upstream cobalt.
 
 ## how it runs
-- one cloudflare worker serves the site. a second worker resolves links and streams downloads. you can run both on cloudflare's free plan without a separate server.
-- when a download needs merging or conversion, your browser does the work. you can follow it in the processing queue.
+
+- one worker serves the site and another resolves links and streams files. both fit on cloudflare's free plan.
+- your browser merges tracks and converts files when needed. you can follow each job in the processing queue.
 
 ## what you can download
-paste a link to save video, audio, or photos from supported sites. you can try youtube audio, soundcloud tracks, streamable videos, or photo posts from tiktok and bluesky. available formats depend on what each site sends back.
+
+try a soundcloud track, a streamable video, or a photo post from tiktok or bluesky. open the supported services menu on the download page to see what's available here.
