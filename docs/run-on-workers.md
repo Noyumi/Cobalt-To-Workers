@@ -4,7 +4,7 @@ the site and the api run as two cloudflare workers on the free plan. the api res
 
 ## before you start
 
-use node.js 24 lts and the pnpm version in `package.json`. from the repo root, install the dependencies and run the worker tests.
+use node.js 26 lts and the pnpm version in `package.json`. from the repo root, install the dependencies and run the worker tests.
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
